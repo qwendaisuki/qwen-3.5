@@ -2,21 +2,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const chatHistory = document.getElementById('chat-history');
-    const newChatButton = document.getElementById('new-chat-button'); // NEW: Ambil tombol New Chat
+    const newChatButton = document.getElementById('new-chat-button');
     let currentAiMessageElement = null; // Untuk menyimpan referensi ke elemen pesan AI yang sedang ditampilkan
 
-    // Function to add a message to the chat history
-    async function addMessageToChat(sender, message = '') {
+    // NEW: Array untuk menyimpan riwayat pesan sebagai objek
+    // Ini lebih baik daripada menyimpan innerHTML secara langsung karena lebih mudah dikelola
+    let messages = []; 
+
+    // Function to save messages to Local Storage
+    function saveMessagesToLocalStorage() {
+        localStorage.setItem('qwen35_chat_history', JSON.stringify(messages));
+    }
+
+    // Function to load messages from Local Storage
+    function loadMessagesFromLocalStorage() {
+        const savedMessages = localStorage.getItem('qwen35_chat_history');
+        if (savedMessages) {
+            messages = JSON.parse(savedMessages);
+            // Render ulang semua pesan yang tersimpan
+            chatHistory.innerHTML = ''; // Kosongkan dulu untuk menghindari duplikasi
+            for (const msg of messages) {
+                // Gunakan fungsi render terpisah agar tidak memicu saveMessagesToLocalStorage lagi
+                renderMessageToChatHistory(msg.sender, msg.content); 
+            }
+            chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll ke bawah
+            return true; // Menandakan ada riwayat yang dimuat
+        }
+        return false; // Tidak ada riwayat yang dimuat
+    }
+
+    // NEW: Fungsi terpisah untuk merender pesan ke UI tanpa menyentuh array 'messages' atau localStorage
+    function renderMessageToChatHistory(sender, content) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('chat-message', sender);
 
-        // Buat ikon AI untuk pesan AI
         const aiIcon = document.createElement('div');
         aiIcon.classList.add('ai-icon');
         aiIcon.textContent = 'Q';
         messageDiv.appendChild(aiIcon);
 
-        // Buat elemen teks untuk pesan
         const textContent = document.createElement('div');
         textContent.classList.add('message-text');
         messageDiv.appendChild(textContent);
@@ -25,10 +49,27 @@ document.addEventListener('DOMContentLoaded', () => {
         chatHistory.scrollTop = chatHistory.scrollHeight; // Pastikan scroll ke bawah
 
         if (sender === 'ai') {
-            currentAiMessageElement = textContent; // Set referensi ke elemen teks AI ini
-            textContent.innerHTML = marked.parse(message); // Render markdown
+            textContent.innerHTML = marked.parse(content); // Render markdown untuk pesan AI
         } else { // Pesan User
-            textContent.innerHTML = message; // Pesan user tidak perlu di-parse markdown
+            textContent.innerHTML = content; // Pesan user tidak perlu di-parse markdown
+        }
+    }
+
+    // Function to add a message to the chat history (now also saves to 'messages' array)
+    async function addMessageToChat(sender, message = '') {
+        // Render pesan ke UI
+        renderMessageToChatHistory(sender, message);
+        
+        // Simpan pesan ke array 'messages'
+        messages.push({ sender, content: message });
+        saveMessagesToLocalStorage(); // Simpan ke localStorage
+
+        // Set currentAiMessageElement hanya jika itu pesan AI baru
+        if (sender === 'ai') {
+            const lastMessageDiv = chatHistory.lastChild;
+            if (lastMessageDiv) {
+                 currentAiMessageElement = lastMessageDiv.querySelector('.message-text');
+            }
         }
     }
 
@@ -38,21 +79,24 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.value = ''; // Kosongkan input field
         userInput.style.height = 'auto'; // Reset tinggi textarea
         currentAiMessageElement = null; // Reset referensi pesan AI
-        addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?'); // Tampilkan greeting awal lagi
+        messages = []; // Kosongkan array pesan
+        localStorage.removeItem('qwen35_chat_history'); // Hapus dari localStorage
+
+        // Tampilkan greeting awal lagi dan simpan ke history baru
+        addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?'); 
     }
 
     // Event listener for send button click
     sendButton.addEventListener('click', async () => {
         const message = userInput.value.trim();
         if (message) {
-            await addMessageToChat('user', message); // Tambahkan pesan user
+            await addMessageToChat('user', message); // Tambahkan pesan user & simpan
             userInput.value = ''; // Kosongkan input
             userInput.style.height = 'auto'; // Reset tinggi textarea
 
-            await addMessageToChat('ai', 'Thinking...'); // Tampilkan indikator 'Thinking...'
+            await addMessageToChat('ai', 'Thinking...'); // Tampilkan indikator 'Thinking...' & simpan
 
             try {
-                // Menggunakan Fetch API untuk mengirim prompt ke serverless function (non-streaming)
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
@@ -71,17 +115,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Ganti 'Thinking...' dengan respons AI yang sebenarnya
                 if (currentAiMessageElement) {
                     currentAiMessageElement.innerHTML = marked.parse(data.response); // Render markdown untuk respons AI
+                    // Update array messages dan localStorage setelah AI merespons
+                    // Cari pesan 'Thinking...' terakhir dan update content-nya
+                    const lastAiMessageIndex = messages.findIndex(msg => msg.sender === 'ai' && msg.content === 'Thinking...');
+                    if (lastAiMessageIndex !== -1) {
+                        messages[lastAiMessageIndex].content = data.response;
+                        saveMessagesToLocalStorage();
+                    }
                 }
                 
             } catch (error) {
                 console.error('Error fetching AI response:', error);
+                const errorMessage = `Oops! Something went wrong. Please try again.<br><small><em>Details: ${error.message}</em></small>`;
                 if (currentAiMessageElement) {
-                    currentAiMessageElement.innerHTML = `
-                        Oops! Something went wrong. Please try again.<br>
-                        <small><em>Details: ${error.message}</em></small>
-                    `;
+                    currentAiMessageElement.innerHTML = errorMessage;
+                    // Update array messages dengan pesan error
+                    const lastAiMessageIndex = messages.findIndex(msg => msg.sender === 'ai' && msg.content === 'Thinking...');
+                    if (lastAiMessageIndex !== -1) {
+                        messages[lastAiMessageIndex].content = errorMessage;
+                        saveMessagesToLocalStorage();
+                    }
                 } else {
-                    await addMessageToChat('ai', `Oops! Something went wrong. Please try again.<br><small><em>Details: ${error.message}</em></small>`);
+                    await addMessageToChat('ai', errorMessage); // Jika tidak ada currentAiMessageElement, buat pesan error baru
                 }
             } finally {
                 currentAiMessageElement = null; // Reset referensi setelah selesai atau gagal
@@ -103,10 +158,18 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.style.height = userInput.scrollHeight + 'px';
     });
 
-    // Initial greeting (dipanggil di awal dan saat New Chat)
-    startNewChat(); // NEW: Panggil fungsi ini untuk inisialisasi awal
+    // Load messages from Local Storage on initial load
+    const hasSavedMessages = loadMessagesFromLocalStorage();
+    if (!hasSavedMessages) {
+        // Jika tidak ada riwayat, mulai chat baru dengan greeting
+        startNewChat(); 
+    } else {
+        // Jika ada riwayat, pastikan currentAiMessageElement diset ulang ke null
+        // karena kita tidak dalam proses mengetik pesan AI baru
+        currentAiMessageElement = null; 
+    }
 
-    // NEW: Event listener untuk tombol New Chat
+    // Event listener untuk tombol New Chat
     newChatButton.addEventListener('click', startNewChat);
 
     // Make suggested prompts and action buttons clickable
