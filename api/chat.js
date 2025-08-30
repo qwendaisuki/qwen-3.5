@@ -14,7 +14,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Model ID untuk Gemini 2.5 Flash.
 // Pastikan ini sesuai dengan model yang ingin Anda gunakan.
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); // Atau "gemini-1.5-flash"
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Atau "gemini-1.5-flash"
 
 export default async function handler(req, res) {
     if (req.method === 'POST') {
