@@ -2,129 +2,121 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const chatHistory = document.getElementById('chat-history');
-
-    // Function to simulate typing for the AI response
-    function typeText(element, text, speed = 20) {
-        let i = 0;
-        element.innerHTML = ''; // Clear existing text if any (e.g., "Thinking...")
-        return new Promise(resolve => {
-            function type() {
-                if (i < text.length) {
-                    element.innerHTML += text.charAt(i);
-                    i++;
-                    chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll during typing
-                    setTimeout(type, speed);
-                } else {
-                    resolve();
-                }
-            }
-            type();
-        });
-    }
+    let currentAiMessageElement = null; // Untuk menyimpan referensi ke elemen pesan AI yang sedang ditampilkan
 
     // Function to add a message to the chat history
-    async function addMessageToChat(sender, message) {
+    async function addMessageToChat(sender, message = '') {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('chat-message', sender);
 
+        // Buat ikon AI untuk pesan AI
+        const aiIcon = document.createElement('div');
+        aiIcon.classList.add('ai-icon');
+        aiIcon.textContent = 'Q';
+        messageDiv.appendChild(aiIcon);
+
+        // Buat elemen teks untuk pesan
+        const textContent = document.createElement('div');
+        textContent.classList.add('message-text');
+        messageDiv.appendChild(textContent);
+
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Pastikan scroll ke bawah
+
         if (sender === 'ai') {
-            const aiIcon = document.createElement('div');
-            aiIcon.classList.add('ai-icon');
-            aiIcon.textContent = 'Q'; // Placeholder for Qwen icon
-            messageDiv.appendChild(aiIcon);
-
-            const textContent = document.createElement('div');
-            textContent.classList.add('message-text');
-            messageDiv.appendChild(textContent);
-
-            chatHistory.appendChild(messageDiv);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
-
-            await typeText(textContent, message); // Simulate typing
-        } else {
-            messageDiv.innerHTML = `<div class="message-text">${message}</div>`;
-            chatHistory.appendChild(messageDiv);
+            currentAiMessageElement = textContent; // Set referensi ke elemen teks AI ini
+            textContent.textContent = message; // Set teks awal (e.g., 'Thinking...')
+        } else { // Pesan User
+            textContent.textContent = message;
         }
-        chatHistory.scrollTop = chatHistory.scrollHeight; // Ensure scroll to bottom after message
     }
 
     // Event listener for send button click
     sendButton.addEventListener('click', async () => {
         const message = userInput.value.trim();
         if (message) {
-            await addMessageToChat('user', message); // Add user message to chat
-            userInput.value = ''; // Clear input field
-            userInput.style.height = 'auto'; // Reset textarea height
+            await addMessageToChat('user', message); // Tambahkan pesan user
+            userInput.value = ''; // Kosongkan input
+            userInput.style.height = 'auto'; // Reset tinggi textarea
 
-            await addMessageToChat('ai', 'Thinking...'); // Show thinking state
-            
-            // --- ACTUAL VERCEL API CALL ---
+            await addMessageToChat('ai', 'Thinking...'); // Tampilkan indikator 'Thinking...'
+
             try {
-                const response = await fetch('/api/chat', { // Endpoint Vercel Serverless Function
+                // Menggunakan Fetch API untuk mengirim prompt ke serverless function (non-streaming)
+                const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ prompt: message }),
                 });
-                
+
                 if (!response.ok) {
-                    // Coba baca error dari response jika ada
                     const errorData = await response.json();
                     throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.error || response.statusText}`);
                 }
                 
-                const data = await response.json();
+                const data = await response.json(); // Ambil seluruh respons sekaligus
                 
-                // Replace 'Thinking...' with actual AI response
-                const lastAiMessage = chatHistory.lastChild;
-                if (lastAiMessage && lastAiMessage.classList.contains('ai')) {
-                    const textContentElement = lastAiMessage.querySelector('.message-text');
-                    if (textContentElement) {
-                        textContentElement.innerHTML = ''; // Clear "Thinking..."
-                        await typeText(textContentElement, data.response); // Type out the AI's response
-                    }
+                // Ganti 'Thinking...' dengan respons AI yang sebenarnya
+                if (currentAiMessageElement) {
+                    currentAiMessageElement.innerHTML = data.response; // Set seluruh respons
                 }
                 
             } catch (error) {
                 console.error('Error fetching AI response:', error);
-                const lastAiMessage = chatHistory.lastChild;
-                if (lastAiMessage && lastAiMessage.classList.contains('ai')) {
-                    const textContentElement = lastAiMessage.querySelector('.message-text');
-                    if (textContentElement) {
-                         textContentElement.innerHTML = 'Oops! Something went wrong. Please try again or check the console for errors.';
-                    }
+                if (currentAiMessageElement) {
+                    currentAiMessageElement.innerHTML = `
+                        Oops! Something went wrong. Please try again.<br>
+                        <small><em>Details: ${error.message}</em></small>
+                    `;
+                } else {
+                    await addMessageToChat('ai', `Oops! Something went wrong. Please try again.<br><small><em>Details: ${error.message}</em></small>`);
                 }
+            } finally {
+                currentAiMessageElement = null; // Reset referensi setelah selesai atau gagal
             }
-            // --- END VERCEL API CALL ---
         }
     });
 
     // Event listener for Enter key in textarea
     userInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) { // Shift+Enter for new line
-            event.preventDefault(); // Prevent default Enter behavior (new line)
-            sendButton.click(); // Trigger send button click
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendButton.click();
         }
     });
 
     // Adjust textarea height dynamically
     userInput.addEventListener('input', () => {
-        userInput.style.height = 'auto'; // Reset height
-        userInput.style.height = userInput.scrollHeight + 'px'; // Set to scroll height
+        userInput.style.height = 'auto';
+        userInput.style.height = userInput.scrollHeight + 'px';
     });
 
     // Initial greeting
     addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?');
 
-    // Make suggested prompts clickable (optional, you can expand this logic)
-    document.querySelectorAll('.suggested-prompt').forEach(promptDiv => {
-        promptDiv.addEventListener('click', () => {
-            const text = promptDiv.querySelector('p').textContent.trim();
+    // --- NEW: Make suggested prompts and action buttons clickable ---
+
+    // Make action buttons clickable
+    document.querySelectorAll('.action-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const text = button.textContent.trim(); // Ambil teks dari tombol
             userInput.value = text;
             userInput.focus();
-            // Optionally, trigger send if the prompt is meant to be sent immediately
-            // sendButton.click();
+            userInput.style.height = 'auto'; // Reset height setelah mengisi
+            userInput.style.height = userInput.scrollHeight + 'px'; // Sesuaikan tinggi
+        });
+    });
+
+    // Make suggested prompts clickable
+    document.querySelectorAll('.suggested-prompt').forEach(promptDiv => {
+        promptDiv.addEventListener('click', () => {
+            const text = promptDiv.querySelector('p').textContent.trim(); // Ambil teks dari tag <p> di dalam promptDiv
+            userInput.value = text;
+            userInput.focus();
+            userInput.style.height = 'auto'; // Reset height setelah mengisi
+            userInput.style.height = userInput.scrollHeight + 'px'; // Sesuaikan tinggi
         });
     });
 });
