@@ -1,64 +1,130 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+document.addEventListener('DOMContentLoaded', () => {
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const chatHistory = document.getElementById('chat-history');
 
-const API_KEY = process.env.GEMINI_API_KEY;
+    // Function to simulate typing for the AI response
+    function typeText(element, text, speed = 20) {
+        let i = 0;
+        element.innerHTML = ''; // Clear existing text if any (e.g., "Thinking...")
+        return new Promise(resolve => {
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll during typing
+                    setTimeout(type, speed);
+                } else {
+                    resolve();
+                }
+            }
+            type();
+        });
+    }
 
-if (!API_KEY) {
-    console.error("GEMINI_API_KEY is not set in environment variables.");
-    throw new Error("GEMINI_API_KEY is not set.");
-}
+    // Function to add a message to the chat history
+    async function addMessageToChat(sender, message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message', sender);
 
-const genAI = new GoogleGenerativeAI(API_KEY);
-// Gunakan model yang terbukti berhasil untukmu, misalnya "gemini-1.5-flash" atau "gemini-2.5-flash"
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+        if (sender === 'ai') {
+            const aiIcon = document.createElement('div');
+            aiIcon.classList.add('ai-icon');
+            aiIcon.textContent = 'Q'; // Placeholder for Qwen icon
+            messageDiv.appendChild(aiIcon);
 
-export default async function handler(req, res) {
-    if (req.method === 'POST') {
-        const { prompt } = req.body;
+            const textContent = document.createElement('div');
+            textContent.classList.add('message-text');
+            messageDiv.appendChild(textContent);
 
-        if (!prompt) {
-            return res.status(400).json({ error: 'Prompt is required' });
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            await typeText(textContent, message); // Simulate typing
+        } else {
+            messageDiv.innerHTML = `<div class="message-text">${message}</div>`;
+            chatHistory.appendChild(messageDiv);
         }
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Ensure scroll to bottom after message
+    }
 
-        try {
-            // Menggunakan generateContentStream untuk mendapatkan respons yang di-stream
-            const result = await model.generateContentStream(prompt);
+    // Event listener for send button click
+    sendButton.addEventListener('click', async () => {
+        const message = userInput.value.trim();
+        if (message) {
+            await addMessageToChat('user', message); // Add user message to chat
+            userInput.value = ''; // Clear input field
+            userInput.style.height = 'auto'; // Reset textarea height
 
-            // Set header untuk streaming
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.setHeader('Cache-Control', 'no-cache');
-            res.setHeader('Connection', 'keep-alive');
-            res.setHeader('X-Accel-Buffering', 'no'); // Penting untuk Nginx/Vercel agar tidak buffer
-
-            // Iterasi melalui stream dan kirim setiap chunk sebagai Server-Sent Events (SSE)
-            for await (const chunk of result.stream) {
-                const candidate = chunk.candidates[0];
-                if (candidate && candidate.content && candidate.content.parts) {
-                    const text = candidate.content.parts.map(part => part.text).join('');
-                    if (text) {
-                        // Kirim setiap chunk sebagai data SSE
-                        res.write(`data: ${JSON.stringify({ text })}\n\n`);
+            await addMessageToChat('ai', 'Thinking...'); // Show thinking state
+            
+            // --- ACTUAL VERCEL API CALL ---
+            try {
+                const response = await fetch('/api/chat', { // Endpoint Vercel Serverless Function
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: message }),
+                });
+                
+                if (!response.ok) {
+                    // Coba baca error dari response jika ada
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.error || response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Replace 'Thinking...' with actual AI response
+                const lastAiMessage = chatHistory.lastChild;
+                if (lastAiMessage && lastAiMessage.classList.contains('ai')) {
+                    const textContentElement = lastAiMessage.querySelector('.message-text');
+                    if (textContentElement) {
+                        textContentElement.innerHTML = ''; // Clear "Thinking..."
+                        await typeText(textContentElement, data.response); // Type out the AI's response
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error fetching AI response:', error);
+                const lastAiMessage = chatHistory.lastChild;
+                if (lastAiMessage && lastAiMessage.classList.contains('ai')) {
+                    const textContentElement = lastAiMessage.querySelector('.message-text');
+                    if (textContentElement) {
+                         textContentElement.innerHTML = 'Oops! Something went wrong. Please try again or check the console for errors.';
                     }
                 }
             }
-            res.end(); // Akhiri stream setelah semua chunk terkirim
-
-        } catch (error) {
-            console.error('Error calling Gemini API:', error);
-            // Tangani error dan kirim sebagai pesan tunggal jika streaming gagal di awal
-            // Pastikan tidak mencoba mengirim header SSE jika respons sudah dimulai
-            if (!res.headersSent) {
-                if (error.response && error.response.data) {
-                    console.error("Gemini API Error Details:", error.response.data);
-                    return res.status(500).json({ error: 'Failed to get response from AI', details: error.response.data.message });
-                }
-                return res.status(500).json({ error: 'Failed to get response from AI', details: error.message });
-            } else {
-                // Jika headers sudah terkirim, kita hanya bisa log errornya
-                console.error("Error occurred after headers sent, cannot send JSON error:", error.message);
-            }
+            // --- END VERCEL API CALL ---
         }
-    } else {
-        res.setHeader('Allow', ['POST']);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
-    }
-}
+    });
+
+    // Event listener for Enter key in textarea
+    userInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) { // Shift+Enter for new line
+            event.preventDefault(); // Prevent default Enter behavior (new line)
+            sendButton.click(); // Trigger send button click
+        }
+    });
+
+    // Adjust textarea height dynamically
+    userInput.addEventListener('input', () => {
+        userInput.style.height = 'auto'; // Reset height
+        userInput.style.height = userInput.scrollHeight + 'px'; // Set to scroll height
+    });
+
+    // Initial greeting
+    addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?');
+
+    // Make suggested prompts clickable (optional, you can expand this logic)
+    document.querySelectorAll('.suggested-prompt').forEach(promptDiv => {
+        promptDiv.addEventListener('click', () => {
+            const text = promptDiv.querySelector('p').textContent.trim();
+            userInput.value = text;
+            userInput.focus();
+            // Optionally, trigger send if the prompt is meant to be sent immediately
+            // sendButton.click();
+        });
+    });
+});
