@@ -5,9 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const newChatButton = document.getElementById('new-chat-button');
     let currentAiMessageElement = null; // Untuk menyimpan referensi ke elemen pesan AI yang sedang ditampilkan
 
-    // NEW: Array untuk menyimpan riwayat pesan sebagai objek
-    // Ini lebih baik daripada menyimpan innerHTML secara langsung karena lebih mudah dikelola
     let messages = []; 
+
+    // NEW: Fungsi terpisah untuk memastikan chat history selalu scroll ke bawah
+    function scrollToBottom() {
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
 
     // Function to save messages to Local Storage
     function saveMessagesToLocalStorage() {
@@ -19,19 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedMessages = localStorage.getItem('qwen35_chat_history');
         if (savedMessages) {
             messages = JSON.parse(savedMessages);
-            // Render ulang semua pesan yang tersimpan
             chatHistory.innerHTML = ''; // Kosongkan dulu untuk menghindari duplikasi
             for (const msg of messages) {
-                // Gunakan fungsi render terpisah agar tidak memicu saveMessagesToLocalStorage lagi
                 renderMessageToChatHistory(msg.sender, msg.content); 
             }
-            chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll ke bawah
-            return true; // Menandakan ada riwayat yang dimuat
+            scrollToBottom(); // NEW: Panggil scrollToBottom setelah merender semua pesan
+            return true; 
         }
-        return false; // Tidak ada riwayat yang dimuat
+        return false; 
     }
 
-    // NEW: Fungsi terpisah untuk merender pesan ke UI tanpa menyentuh array 'messages' atau localStorage
+    // Fungsi terpisah untuk merender pesan ke UI tanpa menyentuh array 'messages' atau localStorage
     function renderMessageToChatHistory(sender, content) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('chat-message', sender);
@@ -46,12 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.appendChild(textContent);
 
         chatHistory.appendChild(messageDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight; // Pastikan scroll ke bawah
+        scrollToBottom(); // NEW: Panggil scrollToBottom setiap kali pesan baru ditambahkan
 
         if (sender === 'ai') {
-            textContent.innerHTML = marked.parse(content); // Render markdown untuk pesan AI
+            textContent.innerHTML = marked.parse(content); 
         } else { // Pesan User
-            textContent.innerHTML = content; // Pesan user tidak perlu di-parse markdown
+            textContent.innerHTML = content; 
         }
     }
 
@@ -73,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // NEW: Function to clear chat history and start a new chat
+    // Function to clear chat history and start a new chat
     function startNewChat() {
         chatHistory.innerHTML = ''; // Kosongkan semua pesan di riwayat chat
         userInput.value = ''; // Kosongkan input field
@@ -116,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (currentAiMessageElement) {
                     currentAiMessageElement.innerHTML = marked.parse(data.response); // Render markdown untuk respons AI
                     // Update array messages dan localStorage setelah AI merespons
-                    // Cari pesan 'Thinking...' terakhir dan update content-nya
                     const lastAiMessageIndex = messages.findIndex(msg => msg.sender === 'ai' && msg.content === 'Thinking...');
                     if (lastAiMessageIndex !== -1) {
                         messages[lastAiMessageIndex].content = data.response;
@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 currentAiMessageElement = null; // Reset referensi setelah selesai atau gagal
             }
+            scrollToBottom(); // NEW: Panggil scrollToBottom setelah respons AI selesai atau error terjadi
         }
     });
 
@@ -161,11 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load messages from Local Storage on initial load
     const hasSavedMessages = loadMessagesFromLocalStorage();
     if (!hasSavedMessages) {
-        // Jika tidak ada riwayat, mulai chat baru dengan greeting
         startNewChat(); 
     } else {
-        // Jika ada riwayat, pastikan currentAiMessageElement diset ulang ke null
-        // karena kita tidak dalam proses mengetik pesan AI baru
         currentAiMessageElement = null; 
     }
 
@@ -180,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.focus();
             userInput.style.height = 'auto'; 
             userInput.style.height = userInput.scrollHeight + 'px'; 
+            scrollToBottom(); // NEW: Auto-scroll saat prompt diisi dari tombol
         });
     });
 
@@ -190,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.focus();
             userInput.style.height = 'auto'; 
             userInput.style.height = userInput.scrollHeight + 'px'; 
+            scrollToBottom(); // NEW: Auto-scroll saat prompt diisi dari tombol
         });
     });
 });
