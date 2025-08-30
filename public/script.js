@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendButton = document.getElementById('send-button');
     const chatHistory = document.getElementById('chat-history');
     let currentAiMessageElement = null; // Untuk menyimpan referensi ke elemen pesan AI yang sedang di-stream
-    let typingIndicatorElement = null; // Referensi ke elemen indikator mengetik
 
     // Function to append text to the current AI message element
     function appendTextToAiMessage(text) {
@@ -18,45 +17,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('chat-message', sender);
 
+        // Buat ikon AI untuk pesan AI
+        const aiIcon = document.createElement('div');
+        aiIcon.classList.add('ai-icon');
+        aiIcon.textContent = 'Q';
+        messageDiv.appendChild(aiIcon);
+
+        // Buat elemen teks untuk pesan
+        const textContent = document.createElement('div');
+        textContent.classList.add('message-text');
+        messageDiv.appendChild(textContent);
+
+        chatHistory.appendChild(messageDiv);
+        chatHistory.scrollTop = chatHistory.scrollHeight; // Pastikan scroll ke bawah
+
         if (sender === 'ai') {
-            const aiIcon = document.createElement('div');
-            aiIcon.classList.add('ai-icon');
-            aiIcon.textContent = 'Q';
-            messageDiv.appendChild(aiIcon);
+            currentAiMessageElement = textContent; // Set referensi ke elemen teks AI ini
 
-            const textContent = document.createElement('div');
-            textContent.classList.add('message-text');
-            messageDiv.appendChild(textContent);
-
-            chatHistory.appendChild(messageDiv);
-            currentAiMessageElement = textContent; // Set referensi untuk streaming
-
-            if (message === 'typing-indicator') { // Khusus untuk indikator mengetik
-                currentAiMessageElement.innerHTML = ''; // Pastikan kosong
-                typingIndicatorElement = document.createElement('div');
-                typingIndicatorElement.classList.add('typing-indicator');
-                typingIndicatorElement.innerHTML = `
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
+            if (message === 'typing-indicator') {
+                // Jika pesan adalah 'typing-indicator', masukkan HTML animasi langsung ke elemen teks
+                textContent.innerHTML = `
+                    <div class="typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
                 `;
-                currentAiMessageElement.appendChild(typingIndicatorElement);
             } else {
-                currentAiMessageElement.textContent = message; // Initial text (e.g., error messages)
+                // Untuk pesan awal atau error, langsung set teks
+                textContent.textContent = message;
             }
 
-        } else {
-            messageDiv.innerHTML = `<div class="message-text">${message}</div>`;
-            chatHistory.appendChild(messageDiv);
-        }
-        chatHistory.scrollTop = chatHistory.scrollHeight; // Pastikan scroll ke bawah
-    }
-
-    // Function to remove the typing indicator
-    function removeTypingIndicator() {
-        if (typingIndicatorElement && typingIndicatorElement.parentNode) {
-            typingIndicatorElement.parentNode.removeChild(typingIndicatorElement);
-            typingIndicatorElement = null;
+        } else { // Pesan User
+            textContent.textContent = message;
         }
     }
 
@@ -71,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             await addMessageToChat('ai', 'typing-indicator'); // Tampilkan indikator mengetik animasi
 
             try {
-                // Menggunakan Fetch API untuk membaca stream dari serverless function
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
@@ -79,13 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify({ prompt: message }),
                 });
-
-                // Setelah mendapatkan respons dari fetch, hapus indikator mengetik
-                removeTypingIndicator();
-                if (currentAiMessageElement) {
-                    currentAiMessageElement.textContent = ''; // Pastikan juga teks awal "typing-indicator" hilang
-                }
-
 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -96,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let buffer = '';
+                let firstChunkReceived = false; // Flag untuk tahu kapan chunk teks pertama tiba
 
                 while (true) {
                     const { value, done } = await reader.read();
@@ -113,6 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const jsonString = line.substring(6); // Hapus 'data: '
                                 const data = JSON.parse(jsonString);
                                 if (data.text) {
+                                    if (!firstChunkReceived && currentAiMessageElement) {
+                                        // Saat chunk teks pertama tiba, hapus indikator mengetik
+                                        currentAiMessageElement.innerHTML = '';
+                                        firstChunkReceived = true;
+                                    }
                                     appendTextToAiMessage(data.text);
                                 }
                             } catch (e) {
@@ -123,10 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error('Error fetching AI response:', error);
-                // Menampilkan error yang lebih ramah pengguna
                 if (currentAiMessageElement) {
-                    // Hapus indikator mengetik jika error terjadi setelah tampil
-                    removeTypingIndicator(); 
+                    // Jika error terjadi, pastikan indikator mengetik dihapus dan tampilkan pesan error
                     currentAiMessageElement.innerHTML = `
                         Oops! Something went wrong. Please try again.<br>
                         <small><em>Details: ${error.message}</em></small>
@@ -137,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } finally {
                 currentAiMessageElement = null; // Reset referensi setelah stream selesai atau gagal
-                removeTypingIndicator(); // Pastikan indikator hilang di semua kondisi
+                // Di sini tidak perlu removeTypingIndicator() lagi karena sudah dihapus oleh firstChunkReceived
             }
         }
     });
