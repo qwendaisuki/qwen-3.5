@@ -25,9 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'ai') {
             currentAiMessageElement = textContent; // Set referensi ke elemen teks AI ini
-            textContent.textContent = message; // Set teks awal (e.g., 'Thinking...')
+            // NEW: Render markdown untuk pesan AI
+            textContent.innerHTML = marked.parse(message); // Menggunakan marked.parse()
         } else { // Pesan User
-            textContent.textContent = message;
+            textContent.innerHTML = message; // Pesan user tidak perlu di-parse markdown
         }
     }
 
@@ -60,7 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Ganti 'Thinking...' dengan respons AI yang sebenarnya
                 if (currentAiMessageElement) {
-                    currentAiMessageElement.innerHTML = data.response; // Set seluruh respons
+                    // NEW: Render markdown untuk respons AI yang datang
+                    currentAiMessageElement.innerHTML = marked.parse(data.response); // Menggunakan marked.parse()
                 }
                 
             } catch (error) {
@@ -96,27 +98,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial greeting
     addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?');
 
-    // --- NEW: Make suggested prompts and action buttons clickable ---
-
-    // Make action buttons clickable
+    // Make suggested prompts clickable (optional, you can expand this logic)
     document.querySelectorAll('.action-button').forEach(button => {
         button.addEventListener('click', () => {
-            const text = button.textContent.trim(); // Ambil teks dari tombol
+            const text = button.textContent.trim(); 
             userInput.value = text;
             userInput.focus();
-            userInput.style.height = 'auto'; // Reset height setelah mengisi
-            userInput.style.height = userInput.scrollHeight + 'px'; // Sesuaikan tinggi
+            userInput.style.height = 'auto'; 
+            userInput.style.height = userInput.scrollHeight + 'px'; 
         });
     });
 
-    // Make suggested prompts clickable
     document.querySelectorAll('.suggested-prompt').forEach(promptDiv => {
         promptDiv.addEventListener('click', () => {
-            const text = promptDiv.querySelector('p').textContent.trim(); // Ambil teks dari tag <p> di dalam promptDiv
+            const text = promptDiv.querySelector('p').textContent.trim(); 
             userInput.value = text;
             userInput.focus();
-            userInput.style.height = 'auto'; // Reset height setelah mengisi
-            userInput.style.height = userInput.scrollHeight + 'px'; // Sesuaikan tinggi
+            userInput.style.height = 'auto'; 
+            userInput.style.height = userInput.scrollHeight + 'px'; 
         });
     });
 });
