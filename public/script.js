@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const chatHistory = document.getElementById('chat-history');
+    const newChatButton = document.getElementById('new-chat-button'); // NEW: Ambil tombol New Chat
     let currentAiMessageElement = null; // Untuk menyimpan referensi ke elemen pesan AI yang sedang ditampilkan
 
     // Function to add a message to the chat history
@@ -25,11 +26,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'ai') {
             currentAiMessageElement = textContent; // Set referensi ke elemen teks AI ini
-            // NEW: Render markdown untuk pesan AI
-            textContent.innerHTML = marked.parse(message); // Menggunakan marked.parse()
+            textContent.innerHTML = marked.parse(message); // Render markdown
         } else { // Pesan User
             textContent.innerHTML = message; // Pesan user tidak perlu di-parse markdown
         }
+    }
+
+    // NEW: Function to clear chat history and start a new chat
+    function startNewChat() {
+        chatHistory.innerHTML = ''; // Kosongkan semua pesan di riwayat chat
+        userInput.value = ''; // Kosongkan input field
+        userInput.style.height = 'auto'; // Reset tinggi textarea
+        currentAiMessageElement = null; // Reset referensi pesan AI
+        addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?'); // Tampilkan greeting awal lagi
     }
 
     // Event listener for send button click
@@ -61,8 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Ganti 'Thinking...' dengan respons AI yang sebenarnya
                 if (currentAiMessageElement) {
-                    // NEW: Render markdown untuk respons AI yang datang
-                    currentAiMessageElement.innerHTML = marked.parse(data.response); // Menggunakan marked.parse()
+                    currentAiMessageElement.innerHTML = marked.parse(data.response); // Render markdown untuk respons AI
                 }
                 
             } catch (error) {
@@ -95,10 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
         userInput.style.height = userInput.scrollHeight + 'px';
     });
 
-    // Initial greeting
-    addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?');
+    // Initial greeting (dipanggil di awal dan saat New Chat)
+    startNewChat(); // NEW: Panggil fungsi ini untuk inisialisasi awal
 
-    // Make suggested prompts clickable (optional, you can expand this logic)
+    // NEW: Event listener untuk tombol New Chat
+    newChatButton.addEventListener('click', startNewChat);
+
+    // Make suggested prompts and action buttons clickable
     document.querySelectorAll('.action-button').forEach(button => {
         button.addEventListener('click', () => {
             const text = button.textContent.trim(); 
