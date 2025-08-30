@@ -1,1 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen 3.5 - Your AI Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Ikon dari Font Awesome untuk kemudahan -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Right Sidebar (mirip Monica) -->
+        <aside class="sidebar-right">
+            <div class="sidebar-item active">
+                <i class="fas fa-comment-dots"></i>
+                <span>Chat</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-robot"></i>
+                <span>Bots</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-search"></i>
+                <span>Search</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-book-reader"></i>
+                <span>Read</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-pen-nib"></i>
+                <span>Write</span>
+            </div>
+            <div class="sidebar-item">
+                <i class="fas fa-ellipsis-h"></i>
+                <span>More</span>
+            </div>
+            <div class="sidebar-item bottom-spacer"></div> <!-- Spacer untuk mendorong profil ke bawah -->
+            <div class="sidebar-item profile">
+                <div class="profile-avatar">Q</div>
+                <span>Profile</span>
+            </div>
+        </aside>
 
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="chat-header">
+                <h1>Hi Bro! <span class="wave-emoji">👋</span></h1>
+                <p>How can I help you today?</p>
+            </div>
+
+            <div class="action-buttons-grid">
+                <button class="action-button">
+                    <i class="fas fa-search"></i>
+                    AI Search
+                </button>
+                <button class="action-button">
+                    <i class="fas fa-upload"></i>
+                    Upload Files
+                </button>
+                <button class="action-button">
+                    <i class="fas fa-pen-fancy"></i>
+                    Writing Agent
+                </button>
+                <button class="action-button">
+                    <i class="fas fa-palette"></i>
+                    Artist
+                </button>
+            </div>
+
+            <p class="suggestions-label">You can also ask me like this</p>
+
+            <div class="suggested-prompts-grid">
+                <div class="suggested-prompt">
+                    <p>Search for AI News</p>
+                    <span>use <span class="skill-tag">@Web Access skill</span></span>
+                    <i class="fas fa-redo-alt reload-icon"></i>
+                </div>
+                <div class="suggested-prompt">
+                    <p>Read a new paper</p>
+                    <span>use <span class="skill-tag">@Set a task reminder skill</span></span>
+                    <i class="fas fa-redo-alt reload-icon"></i>
+                </div>
+                <div class="suggested-prompt">
+                    <p>Prepare bullet points</p>
+                    <span>for a podcast interview on digital nomad life</span>
+                    <i class="fas fa-redo-alt reload-icon"></i>
+                </div>
+            </div>
+
+            <button class="add-skills-button">
+                <i class="fas fa-plus-circle"></i>
+                Add Skills
+            </button>
+
+            <!-- Chat History Area (akan diisi oleh JS) -->
+            <div class="chat-history" id="chat-history">
+                <!-- Pesan akan muncul di sini -->
+            </div>
+        </main>
+
+        <!-- Input Area at the Bottom -->
+        <div class="input-area">
+            <div class="input-controls-top">
+                <div class="dropdown">
+                    <i class="fas fa-robot"></i>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <i class="fas fa-book-open"></i>
+                <i class="fas fa-paperclip"></i>
+                <i class="fas fa-cut"></i>
+                <span class="spacer"></span>
+                <i class="fas fa-sliders-h"></i>
+                <i class="fas fa-history"></i>
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="input-main">
+                <textarea id="user-input" placeholder="Ask me anything, press '/' for prompt"></textarea>
+                <button id="send-button" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-controls-bottom">
+                <div class="input-actions">
+                    <i class="fas fa-percentage"></i>
+                    <i class="fas fa-at"></i>
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <div class="model-selector">
+                    <span>Gemini 2.5 Flash</span>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

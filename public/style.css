@@ -1,1 +1,570 @@
+:root {
+    --bg-primary: #1A1A2E; /* Biru-ungu gelap */
+    --bg-secondary: #282A40; /* Abu-abu gelap kebiruan untuk elemen UI */
+    --text-primary: #E0E0E0; /* Off-white lembut */
+    --text-secondary: #A0A0A0; /* Abu-abu sedang */
+    --accent-color: #8A2BE2; /* Vibrant Violet */
+    --accent-color-hover: #9933FF; /* Violet sedikit lebih terang */
+    --border-color: #363750; /* Border atau highlight halus */
+    --sidebar-bg: #1F1F2A; /* Sidebar sedikit lebih gelap dari bg-primary */
+}
 
+/* Base Styles */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden; /* Mengatasi scrollbar ganda */
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    height: 100vh; /* Mengisi tinggi viewport */
+    max-width: 1600px; /* Batasi lebar untuk tampilan desktop */
+    margin: 0 auto;
+    background-color: var(--bg-primary);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5); /* Sedikit bayangan untuk kesan premium */
+    border-radius: 15px; /* Sudut membulat pada container utama */
+    overflow: hidden; /* Pastikan konten tidak keluar dari sudut membulat */
+}
+
+/* Right Sidebar */
+.sidebar-right {
+    width: 80px;
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    border-left: 1px solid var(--border-color); /* Pembatas tipis */
+    box-sizing: border-box; /* Pastikan padding tidak menambah lebar */
+}
+
+.sidebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 0;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.3s ease, background-color 0.3s ease;
+    width: 100%;
+    font-size: 0.8em;
+}
+
+.sidebar-item:hover {
+    color: var(--text-primary);
+    background-color: rgba(var(--accent-color), 0.1); /* Sedikit highlight */
+}
+
+.sidebar-item.active {
+    color: var(--accent-color);
+}
+
+.sidebar-item i {
+    font-size: 1.4em;
+    margin-bottom: 5px;
+}
+
+.sidebar-item span {
+    text-align: center;
+}
+
+.sidebar-item.bottom-spacer {
+    flex-grow: 1; /* Mendorong elemen di bawahnya ke paling bawah */
+}
+
+.sidebar-item.profile .profile-avatar {
+    width: 35px;
+    height: 35px;
+    background-color: var(--bg-secondary);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+.sidebar-item.profile {
+    padding-bottom: 0; /* Hindari padding ganda */
+}
+
+
+/* Main Content Area */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 800px; /* Batasi lebar konten utama */
+    margin: 0 auto;
+    overflow-y: auto; /* Scrollable jika kontennya panjang */
+    padding-bottom: 200px; /* Ruang untuk input area di bawah */
+    box-sizing: border-box;
+}
+
+.chat-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.chat-header h1 {
+    font-size: 2.5em;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.chat-header p {
+    font-size: 1.2em;
+    color: var(--text-secondary);
+}
+
+.wave-emoji {
+    font-size: 0.8em; /* Membuat emoji sedikit lebih kecil dari teks */
+}
+
+.action-buttons-grid, .suggested-prompts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.action-button, .suggested-prompt, .add-skills-button {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: none;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 1.1em;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+}
+
+.action-button:hover, .suggested-prompt:hover, .add-skills-button:hover {
+    background-color: #363750; /* Sedikit lebih terang saat hover */
+    border-color: var(--accent-color);
+}
+
+.action-button i {
+    font-size: 1.5em;
+    color: var(--accent-color);
+}
+
+.suggestions-label {
+    width: 100%;
+    text-align: left;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    font-size: 0.95em;
+}
+
+.suggested-prompt {
+    flex-direction: column; /* Teks dan skill tag vertikal */
+    align-items: flex-start;
+    position: relative;
+    padding-right: 40px; /* Ruang untuk ikon reload */
+}
+
+.suggested-prompt p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.suggested-prompt span {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin-top: 5px;
+}
+
+.skill-tag {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.reload-icon {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1.1em;
+    opacity: 0.7;
+    transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.suggested-prompt:hover .reload-icon {
+    opacity: 1;
+    color: var(--text-primary);
+}
+
+.add-skills-button {
+    width: 100%;
+    justify-content: center;
+    margin-top: 20px;
+    background-color: transparent;
+    border: 1px dashed var(--border-color);
+    color: var(--accent-color);
+    font-weight: 600;
+}
+
+.add-skills-button i {
+    color: var(--accent-color);
+    font-size: 1.2em;
+}
+.add-skills-button:hover {
+    background-color: rgba(var(--accent-color), 0.05);
+}
+
+
+/* Chat History */
+.chat-history {
+    width: 100%;
+    margin-top: 40px;
+    padding-bottom: 20px; /* Ruang tambahan di bawah */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Chat Message Styling */
+.chat-message {
+    display: flex;
+    margin-bottom: 15px;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 80%; /* Batasi lebar bubble pesan */
+}
+
+.chat-message.user {
+    justify-content: flex-end;
+    margin-left: auto;
+    color: var(--text-primary);
+}
+
+.chat-message.ai {
+    justify-content: flex-start;
+    margin-right: auto;
+    color: var(--text-primary);
+}
+
+.chat-message .message-text {
+    background-color: var(--bg-secondary);
+    padding: 12px 18px;
+    border-radius: 18px;
+    line-height: 1.6;
+    word-wrap: break-word; /* Memastikan teks panjang memisah */
+    white-space: pre-wrap; /* Mempertahankan spasi dan line break */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message.user .message-text {
+    background-color: var(--accent-color);
+    color: white;
+    border-bottom-right-radius: 5px; /* Efek Monica */
+}
+
+.chat-message.ai .message-text {
+    background-color: #363750; /* Sedikit berbeda dari bg-secondary */
+    border-bottom-left-radius: 5px; /* Efek Monica */
+}
+
+.ai-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    background-color: var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0; /* Pastikan ikon tidak mengecil */
+}
+
+
+/* Input Area */
+.input-area {
+    position: fixed; /* Tetap di bawah */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--bg-primary); /* Sama dengan background utama */
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 1px solid var(--border-color); /* Garis pembatas */
+    z-index: 1000; /* Pastikan di atas konten lain */
+}
+
+.input-area > div {
+    max-width: 800px;
+    width: 100%;
+}
+
+.input-controls-top {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+    font-size: 1.1em;
+}
+
+.input-controls-top i {
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+.input-controls-top i:hover {
+    color: var(--text-primary);
+}
+
+.input-controls-top .dropdown {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: var(--bg-secondary);
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.input-controls-top .dropdown i:last-child {
+    font-size: 0.8em; /* Panah dropdown lebih kecil */
+}
+
+.input-controls-top .spacer {
+    flex-grow: 1; /* Mendorong ikon ke kanan */
+}
+
+.input-main {
+    display: flex;
+    align-items: flex-end; /* Agar tombol kirim sejajar dengan textarea */
+    background-color: var(--bg-secondary);
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+textarea#user-input {
+    flex-grow: 1;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 1em;
+    padding: 10px 15px;
+    resize: none; /* Nonaktifkan resize default textarea */
+    min-height: 40px; /* Tinggi minimum */
+    max-height: 200px; /* Tinggi maksimum sebelum scrollbar muncul */
+    overflow-y: auto;
+    line-height: 1.5;
+}
+textarea#user-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.send-button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 1.2em;
+    margin-left: 10px;
+    flex-shrink: 0; /* Pastikan tidak mengecil */
+}
+.send-button:hover {
+    background-color: var(--accent-color-hover);
+    transform: translateY(-2px);
+}
+.send-button i {
+    transform: rotate(45deg); /* Memutar ikon pesawat */
+}
+
+
+.input-controls-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.input-actions i {
+    margin-right: 15px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+.input-actions i:hover {
+    color: var(--text-primary);
+}
+
+.model-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Toggle Switch Styling */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--text-secondary);
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--accent-color);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--accent-color);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        border-radius: 0; /* Full screen di mobile */
+    }
+
+    .sidebar-right {
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-color);
+        order: 2; /* Pindah sidebar ke bawah di mobile jika perlu */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        background-color: var(--sidebar-bg); /* Pastikan background terlihat */
+        z-index: 1001; /* Di atas input area */
+    }
+
+    .sidebar-item {
+        padding: 10px 5px;
+        flex: 1; /* Distribusi ruang secara merata */
+    }
+    .sidebar-item span {
+        display: none; /* Sembunyikan teks label di mobile */
+    }
+    .sidebar-item i {
+        font-size: 1.3em;
+        margin-bottom: 0;
+    }
+    .sidebar-item.bottom-spacer, .sidebar-item.profile {
+        display: none; /* Sembunyikan profil dan spacer di sidebar mobile */
+    }
+
+    .main-content {
+        padding: 20px;
+        order: 1;
+        padding-bottom: 150px; /* Ruang untuk input & mobile sidebar */
+    }
+
+    .chat-header h1 {
+        font-size: 2em;
+    }
+
+    .chat-header p {
+        font-size: 1em;
+    }
+
+    .action-buttons-grid, .suggested-prompts-grid {
+        grid-template-columns: 1fr; /* Satu kolom di mobile */
+    }
+
+    .input-area {
+        position: fixed; /* Tetap di bawah */
+        bottom: 70px; /* Di atas sidebar mobile */
+        left: 0;
+        padding: 15px;
+        border-radius: 0;
+    }
+    .input-controls-top {
+        display: none; /* Sembunyikan kontrol atas di mobile untuk menghemat ruang */
+    }
+    .input-controls-bottom {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .input-controls-bottom .input-actions {
+        width: 100%;
+        text-align: center;
+    }
+}
