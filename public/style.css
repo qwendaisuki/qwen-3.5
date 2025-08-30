@@ -59,19 +59,19 @@ body {
     position: relative; /* Untuk highlight aktif */
 }
 
-/* NEW: Gaya hover untuk semua sidebar-item */
+/* Gaya hover untuk semua sidebar-item */
 .sidebar-item:hover {
     color: var(--text-primary); /* Warna teks lebih terang saat hover */
     background-color: rgba(var(--accent-color), 0.1); /* Sedikit highlight */
 }
 
-/* NEW: Gaya untuk item aktif */
+/* Gaya untuk item aktif */
 .sidebar-item.active {
     color: var(--accent-color); /* Ikon dan teks warna aksen */
     background-color: rgba(var(--accent-color), 0.15); /* Background sedikit lebih menonjol */
 }
 
-/* NEW: Garis indikator aktif di samping item */
+/* Garis indikator aktif di samping item */
 .sidebar-item.active::before {
     content: '';
     position: absolute;
@@ -619,4 +619,59 @@ input:checked + .slider:before {
         transform: translateY(-8px);
         opacity: 1;
     }
+}
+
+/* NEW: Styling for Code Blocks and Copy Button */
+.chat-message.ai .message-text pre {
+    background-color: #0F172A; /* Background lebih gelap untuk blok kode */
+    border-radius: 8px;
+    padding: 15px;
+    overflow-x: auto; /* Scroll horizontal jika kode terlalu panjang */
+    position: relative; /* Untuk posisi tombol copy */
+    margin-top: 10px; /* Sedikit jarak dari teks di atasnya */
+    margin-bottom: 0; /* Hindari margin ganda */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.chat-message.ai .message-text pre code {
+    font-family: 'Fira Code', 'JetBrains Mono', monospace; /* Font monospace yang bagus */
+    font-size: 0.95em;
+    line-height: 1.5;
+    color: #E0E0E0; /* Warna teks kode */
+    display: block; /* Pastikan code memenuhi pre */
+    padding-right: 40px; /* Ruang untuk tombol copy */
+}
+
+/* Styling untuk tombol Copy */
+.copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex; /* Untuk ikon dan teks */
+    align-items: center;
+    gap: 5px;
+}
+
+.copy-button:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.copy-button i {
+    font-size: 0.9em; /* Ukuran ikon */
+    margin-bottom: 0; /* Override default sidebar-item i margin */
+}
+
+/* NEW: Feedback "Copied!" */
+.copy-button.copied {
+    background-color: #28A745; /* Hijau saat sukses copy */
+    color: white;
 }

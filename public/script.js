@@ -7,7 +7,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let messages = []; 
 
-    // NEW: Fungsi terpisah untuk memastikan chat history selalu scroll ke bawah
+    // NEW: Kustomisasi Marked.js renderer untuk menambahkan tombol copy pada blok kode
+    const renderer = new marked.Renderer();
+    renderer.code = (code, language) => {
+        // Jika tidak ada bahasa, gunakan 'plaintext'
+        const langClass = language ? `language-${language}` : '';
+        return `
+            <pre><code class="${langClass}">${code}</code><button class="copy-button"><i class="fas fa-copy"></i> Copy</button></pre>
+        `;
+    };
+    // Mengaplikasikan renderer kustom
+    marked.setOptions({
+        renderer: renderer,
+        highlight: function(code, lang) {
+            // Bisa menambahkan syntax highlighting library di sini, contoh: highlight.js
+            // Untuk saat ini, hanya mengembalikan kode apa adanya
+            return code;
+        },
+        langPrefix: 'language-',
+        gfm: true, // GitHub Flavored Markdown
+        breaks: true, // Line breaks from Markdown will be rendered as <br>
+    });
+
+
+    // Fungsi terpisah untuk memastikan chat history selalu scroll ke bawah
     function scrollToBottom() {
         chatHistory.scrollTop = chatHistory.scrollHeight;
     }
@@ -22,11 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedMessages = localStorage.getItem('qwen35_chat_history');
         if (savedMessages) {
             messages = JSON.parse(savedMessages);
-            chatHistory.innerHTML = ''; // Kosongkan dulu untuk menghindari duplikasi
+            chatHistory.innerHTML = ''; 
             for (const msg of messages) {
                 renderMessageToChatHistory(msg.sender, msg.content); 
             }
-            scrollToBottom(); // NEW: Panggil scrollToBottom setelah merender semua pesan
+            scrollToBottom(); 
             return true; 
         }
         return false; 
@@ -47,14 +70,42 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.appendChild(textContent);
 
         chatHistory.appendChild(messageDiv);
-        scrollToBottom(); // NEW: Panggil scrollToBottom setiap kali pesan baru ditambahkan
+        scrollToBottom(); 
 
         if (sender === 'ai') {
+            // NEW: Render markdown dengan custom renderer
             textContent.innerHTML = marked.parse(content); 
+            // NEW: Tambahkan event listener untuk tombol copy setelah rendering
+            addCopyButtonListeners(textContent);
         } else { // Pesan User
             textContent.innerHTML = content; 
         }
     }
+
+    // NEW: Fungsi untuk menambahkan event listener ke tombol copy
+    function addCopyButtonListeners(element) {
+        const copyButtons = element.querySelectorAll('.copy-button');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const preElement = button.closest('pre');
+                const codeElement = preElement.querySelector('code');
+                const codeToCopy = codeElement.textContent;
+                
+                navigator.clipboard.writeText(codeToCopy).then(() => {
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('copied');
+                    }, 2000); // Reset setelah 2 detik
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            });
+        });
+    }
+
 
     // Function to add a message to the chat history (now also saves to 'messages' array)
     async function addMessageToChat(sender, message = '') {
@@ -76,14 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to clear chat history and start a new chat
     function startNewChat() {
-        chatHistory.innerHTML = ''; // Kosongkan semua pesan di riwayat chat
-        userInput.value = ''; // Kosongkan input field
-        userInput.style.height = 'auto'; // Reset tinggi textarea
-        currentAiMessageElement = null; // Reset referensi pesan AI
-        messages = []; // Kosongkan array pesan
-        localStorage.removeItem('qwen35_chat_history'); // Hapus dari localStorage
+        chatHistory.innerHTML = ''; 
+        userInput.value = ''; 
+        userInput.style.height = 'auto'; 
+        currentAiMessageElement = null; 
+        messages = []; 
+        localStorage.removeItem('qwen35_chat_history'); 
 
-        // Tampilkan greeting awal lagi dan simpan ke history baru
         addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?'); 
     }
 
@@ -91,11 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sendButton.addEventListener('click', async () => {
         const message = userInput.value.trim();
         if (message) {
-            await addMessageToChat('user', message); // Tambahkan pesan user & simpan
-            userInput.value = ''; // Kosongkan input
-            userInput.style.height = 'auto'; // Reset tinggi textarea
+            await addMessageToChat('user', message); 
+            userInput.value = ''; 
+            userInput.style.height = 'auto'; 
 
-            await addMessageToChat('ai', 'Thinking...'); // Tampilkan indikator 'Thinking...' & simpan
+            await addMessageToChat('ai', 'Thinking...'); 
 
             try {
                 const response = await fetch('/api/chat', {
@@ -111,12 +161,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.error || response.statusText}`);
                 }
                 
-                const data = await response.json(); // Ambil seluruh respons sekaligus
+                const data = await response.json(); 
                 
                 // Ganti 'Thinking...' dengan respons AI yang sebenarnya
                 if (currentAiMessageElement) {
                     currentAiMessageElement.innerHTML = marked.parse(data.response); // Render markdown untuk respons AI
-                    // Update array messages dan localStorage setelah AI merespons
+                    // Setelah merender, tambahkan listener copy
+                    addCopyButtonListeners(currentAiMessageElement);
+
                     const lastAiMessageIndex = messages.findIndex(msg => msg.sender === 'ai' && msg.content === 'Thinking...');
                     if (lastAiMessageIndex !== -1) {
                         messages[lastAiMessageIndex].content = data.response;
@@ -129,19 +181,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorMessage = `Oops! Something went wrong. Please try again.<br><small><em>Details: ${error.message}</em></small>`;
                 if (currentAiMessageElement) {
                     currentAiMessageElement.innerHTML = errorMessage;
-                    // Update array messages dengan pesan error
                     const lastAiMessageIndex = messages.findIndex(msg => msg.sender === 'ai' && msg.content === 'Thinking...');
                     if (lastAiMessageIndex !== -1) {
                         messages[lastAiMessageIndex].content = errorMessage;
                         saveMessagesToLocalStorage();
                     }
                 } else {
-                    await addMessageToChat('ai', errorMessage); // Jika tidak ada currentAiMessageElement, buat pesan error baru
+                    await addMessageToChat('ai', errorMessage); 
                 }
             } finally {
-                currentAiMessageElement = null; // Reset referensi setelah selesai atau gagal
+                currentAiMessageElement = null; 
             }
-            scrollToBottom(); // NEW: Panggil scrollToBottom setelah respons AI selesai atau error terjadi
+            scrollToBottom(); 
         }
     });
 
@@ -178,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.focus();
             userInput.style.height = 'auto'; 
             userInput.style.height = userInput.scrollHeight + 'px'; 
-            scrollToBottom(); // NEW: Auto-scroll saat prompt diisi dari tombol
+            scrollToBottom(); 
         });
     });
 
@@ -189,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.focus();
             userInput.style.height = 'auto'; 
             userInput.style.height = userInput.scrollHeight + 'px'; 
-            scrollToBottom(); // NEW: Auto-scroll saat prompt diisi dari tombol
+            scrollToBottom(); 
         });
     });
 });
