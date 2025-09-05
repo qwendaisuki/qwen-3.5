@@ -7,46 +7,22 @@
     --app-bg: #000000;
     --action-button-bg: #2A2A2A;
     --share-button-bg: #3A3A3C;
+    --code-bg: #1E1E1E; /* Warna background untuk blok kode */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body { height: 100%; width: 100%; overflow: hidden; }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; }
 
 .app-container { width: 100%; max-width: 480px; height: 100%; background-color: var(--app-bg); display: flex; flex-direction: column; position: relative; border-radius: 20px; overflow: hidden; }
 
 /* Header */
 .app-header { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; width: 100%; z-index: 10; }
 .menu-icon, .new-chat-icon { cursor: pointer; color: var(--text-color); }
-
-/* --- OPTIMALISASI HEADER ATAS --- */
-.model-badge {
-    display: flex;
-    align-items: center;
-    background-color: var(--header-badge-bg);
-    /* Padding diatur ulang agar badge lebih ramping dan pas */
-    padding: 5px 12px 5px 8px; 
-    border-radius: 20px;
-    font-size: 15px;
-    font-weight: 500;
-}
-
-.model-badge .logo-small {
-    /* Ukuran logo disesuaikan agar tidak terlalu besar di dalam badge */
-    width: 28px;
-    height: 28px;
-    margin-right: 8px;
-    object-fit: cover;
-}
+.model-badge { display: flex; align-items: center; background-color: var(--header-badge-bg); padding: 5px 12px 5px 8px; border-radius: 20px; font-size: 15px; font-weight: 500; }
+.model-badge .logo-small { width: 28px; height: 28px; margin-right: 8px; object-fit: cover; }
 
 /* Area Konten Utama */
 #chat-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
@@ -59,29 +35,24 @@ body {
 .welcome-screen h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
 .welcome-screen p { font-size: 16px; color: var(--text-secondary); }
 
-/* --- Gaya Chat --- */
+/* Gaya Chat */
 .user-message, .ai-message { max-width: 90%; line-height: 1.6; }
 .user-message { align-self: flex-end; text-align: right; }
 .ai-message { align-self: flex-start; text-align: left; }
-
-/* --- PERBAIKAN JARAK DI BALASAN CHAT --- */
-.ai-header {
-    display: flex;
-    align-items: center;
-    /* Gap/jarak dikurangi agar logo dan teks lebih rapat */
-    gap: 6px; /* Dari 8px */
-    margin-bottom: 12px;
-    font-weight: 500;
-    font-size: 16px;
-}
-
-.ai-header .logo-small {
-    width: 30px;
-    height: 30px;
-}
-
-.ai-response-content p { margin-bottom: 12px; }
+.ai-header { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; font-weight: 500; font-size: 16px; }
+.ai-header .logo-small { width: 30px; height: 30px; }
 .ai-response-content img { max-width: 100%; border-radius: 16px; margin-top: 12px; }
+
+/* --- [BARU] Gaya untuk Markdown --- */
+.ai-response-content p { margin-bottom: 12px; }
+.ai-response-content strong, .ai-response-content b { font-weight: 700; color: #fff; }
+.ai-response-content ul, .ai-response-content ol { padding-left: 20px; margin-bottom: 12px; }
+.ai-response-content li { margin-bottom: 6px; }
+.ai-response-content pre { background-color: var(--code-bg); padding: 12px; border-radius: 8px; margin-bottom: 12px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; font-size: 14px; }
+.ai-response-content code { background-color: var(--code-bg); padding: 2px 4px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+.ai-response-content pre code { background: none; padding: 0; }
+/* --- Akhir Gaya Markdown --- */
+
 .action-buttons { display: inline-flex; align-items: center; gap: 6px; background-color: var(--action-button-bg); padding: 6px; border-radius: 24px; margin-top: 8px; }
 .action-buttons button { background: none; border: none; color: var(--text-color); padding: 8px; border-radius: 18px; display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px; }
 .action-buttons button.share-btn { background-color: var(--share-button-bg); padding: 8px 14px; }
