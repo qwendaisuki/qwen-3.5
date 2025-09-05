@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     }
 
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         systemInstruction: "You are Qwen, a helpful and friendly AI assistant. Your responses should be well-structured, informative, and adapt to the user's tone. Use Markdown for formatting when appropriate.",
     });
 
@@ -48,4 +48,5 @@ export default async function handler(req, res) {
     console.error("Error calling Gemini API:", error);
     res.status(500).json({ error: 'Failed to generate content from AI' });
   }
+
 }
