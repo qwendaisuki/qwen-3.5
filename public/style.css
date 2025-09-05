@@ -43,8 +43,8 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .action-buttons button { background: none; border: none; color: var(--text-color); padding: 8px; border-radius: 18px; display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s; }
 .action-buttons button:hover { background-color: var(--hover-bg); }
 .action-buttons button.share-btn { background-color: var(--share-button-bg); padding: 8px 14px; }
-.action-buttons button.liked svg { fill: none; }
 .action-buttons button.liked svg path { fill: var(--text-color); }
+.action-buttons button:not(.liked) svg path[data-like-fill="true"] { fill: none; }
 .action-buttons svg { width: 18px; height: 18px; }
 .typing-indicator { align-self: flex-start; }
 .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
