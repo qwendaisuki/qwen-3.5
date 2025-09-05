@@ -31,8 +31,8 @@ body {
 
 /* PERUBAHAN UKURAN LOGO HEADER ATAS DI SINI */
 .model-badge .logo-small {
-    width: 30px; /* Dari 26px */
-    height: 30px; /* Dari 26px */
+    width: 40px; /* Dari 26px */
+    height: 40px; /* Dari 26px */
     margin-right: 10px;
     object-fit: cover;
 }
@@ -56,8 +56,8 @@ body {
 
 /* PERUBAHAN UKURAN LOGO BALASAN CHAT DI SINI */
 .ai-header .logo-small {
-    width: 30px; /* Dari 28px */
-    height: 30px; /* Dari 28px */
+    width: 35px; /* Dari 28px */
+    height: 35px; /* Dari 28px */
     margin-right: 6px;
 }
 
@@ -93,4 +93,5 @@ body {
 .sidebar-header h2 { font-size: 24px; }
 .close-btn { background: none; border: none; color: var(--text-color); font-size: 32px; cursor: pointer; }
 .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 99; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; }
+
 .overlay.active { opacity: 1; visibility: visible; }
