@@ -28,7 +28,14 @@ body {
 .app-header { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; width: 100%; z-index: 10; }
 .menu-icon, .new-chat-icon { cursor: pointer; color: var(--text-color); }
 .model-badge { display: flex; align-items: center; background-color: var(--header-badge-bg); padding: 6px 14px; border-radius: 20px; font-size: 15px; font-weight: 500; }
-.model-badge .logo-small { width: 26px; height: 26px; margin-right: 10px; object-fit: cover; }
+
+/* PERUBAHAN UKURAN LOGO HEADER ATAS DI SINI */
+.model-badge .logo-small {
+    width: 30px; /* Dari 26px */
+    height: 30px; /* Dari 26px */
+    margin-right: 10px;
+    object-fit: cover;
+}
 
 /* Area Konten Utama */
 #chat-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
@@ -47,11 +54,11 @@ body {
 .ai-message { align-self: flex-start; text-align: left; }
 .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 500; font-size: 16px; }
 
-/* PERUBAHAN DI SINI: Ukuran logo di balasan AI diperbesar */
+/* PERUBAHAN UKURAN LOGO BALASAN CHAT DI SINI */
 .ai-header .logo-small {
-    width: 28px; /* Dari 24px */
-    height: 28px; /* Dari 24px */
-    margin-right: 6px; /* Dari 4px */
+    width: 30px; /* Dari 28px */
+    height: 30px; /* Dari 28px */
+    margin-right: 6px;
 }
 
 .ai-response-content p { margin-bottom: 12px; }
