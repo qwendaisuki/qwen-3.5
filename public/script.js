@@ -383,5 +383,3 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.classList.remove('active');
     }
 });```
-
-Setelah Anda mengganti ketiga file tersebut, deploy ulang. Aplikasi Anda kini memiliki manajemen histori yang lengkap. Selamat, bro! Ini adalah pencapaian besar.
