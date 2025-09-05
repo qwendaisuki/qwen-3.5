@@ -9,6 +9,7 @@
     --share-button-bg: #3A3A3C;
     --code-bg: #1E1E1E;
     --hover-bg: #2c2c2e;
+    --stop-color: #ff4d4d;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; width: 100%; overflow: hidden; }
@@ -46,10 +47,6 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .action-buttons button.liked svg path { fill: var(--text-color); }
 .action-buttons button:not(.liked) svg path[data-like-fill="true"] { fill: none; }
 .action-buttons svg { width: 18px; height: 18px; }
-.stop-generating-container { display: flex; justify-content: center; padding: 10px 0; flex-shrink: 0; }
-#stop-btn { background-color: var(--action-button-bg); border: 1px solid var(--share-button-bg); color: var(--text-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; }
-.voice-btn.listening svg { color: #ff4d4d; animation: pulse 1.5s infinite; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 .typing-indicator { align-self: flex-start; }
 .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
 .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
@@ -61,9 +58,30 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .chat-input-inner { display: flex; align-items: center; background-color: var(--app-bg); border-radius: 48px; padding: 6px; }
 .chat-input-inner input { flex-grow: 1; background: none; border: none; outline: none; color: var(--text-color); font-size: 16px; padding: 10px 5px; }
 .chat-input-inner input::placeholder { color: #8E8E93; }
-.add-btn, .voice-btn, .send-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
-.add-btn { font-size: 28px; font-weight: 300; }
-.send-btn { color: var(--text-color); }
+.add-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; font-size: 28px; font-weight: 300; }
+.right-buttons { display: flex; align-items: center; gap: 4px; }
+.voice-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; position: relative; transition: all 0.3s ease; }
+.voice-btn.listening svg { color: var(--stop-color); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+.send-btn { color: var(--text-color); background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; position: relative; transition: all 0.3s ease; border-radius: 50%; }
+.send-btn svg { position: absolute; transition: opacity 0.2s ease, transform 0.2s ease; }
+.send-btn.loading { background-color: var(--stop-color); border-radius: 12px; }
+.send-btn.loading .send-icon { opacity: 0; transform: scale(0.5); }
+.send-btn .stop-icon { opacity: 0; transform: scale(0.5); }
+.send-btn.loading .stop-icon { opacity: 1; transform: scale(1); }
+.send-btn.loading::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 15px;
+    border: 2px solid transparent;
+    background: conic-gradient(from 90deg at 50% 50%, #fff0 0%, #fff 100%) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
 .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background-color: var(--sidebar-bg); z-index: 100; transform: translateX(-100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; }
 .sidebar.open { transform: translateX(0); }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px 20px 0 20px; flex-shrink: 0; }

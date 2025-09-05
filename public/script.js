@@ -13,10 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const attachBtn = document.getElementById('attach-btn');
     const fileInput = document.getElementById('file-input');
     const historyContainer = document.getElementById('history-container');
-    const stopBtnContainer = document.getElementById('stop-generating-container');
-    const stopBtn = document.getElementById('stop-btn');
     const voiceBtn = document.getElementById('voice-btn');
-
+    const sendBtn = document.getElementById('send-btn');
+    
     // === State Aplikasi ===
     let chatSessions = [];
     let currentChatId = null;
@@ -33,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition.lang = 'id-ID';
         recognition.interimResults = false;
         recognition.onstart = () => { isRecognizing = true; voiceBtn.classList.add('listening'); };
-        recognition.onresult = (event) => { chatInput.value = event.results[0][0].transcript; };
+        recognition.onresult = (event) => { chatInput.value = event.results[0][0].transcript; updateSendButtonState(); };
         recognition.onerror = (event) => { console.error('Speech recognition error:', event.error); };
         recognition.onend = () => { isRecognizing = false; voiceBtn.classList.remove('listening'); };
     }
@@ -42,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentChatId && chatSessions.length > 0) { currentChatId = chatSessions[0].id; }
     renderSidebar();
     renderChat(currentChatId);
+    updateSendButtonState(); // Panggil saat awal
 
     // === Event Listeners ===
     menuIcon.addEventListener('click', openSidebar);
@@ -52,15 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', handleFileAttachment);
     chatForm.addEventListener('submit', handleFormSubmit);
     voiceBtn.addEventListener('click', toggleVoiceRecognition);
-    stopBtn.addEventListener('click', () => abortController.abort());
+    sendBtn.addEventListener('click', handleSendOrStop);
+    chatInput.addEventListener('input', updateSendButtonState);
     document.body.addEventListener('click', handleDynamicClicks);
 
     // === Fungsi Logika Utama ===
+
+    function handleSendOrStop(e) {
+        if (sendBtn.classList.contains('loading')) {
+            e.preventDefault();
+            abortController.abort();
+        }
+    }
 
     async function handleFormSubmit(e) {
         e.preventDefault();
         const prompt = chatInput.value.trim();
         if (!prompt && !attachedFile) return;
+        if (sendBtn.classList.contains('loading')) return;
 
         if (welcomeScreen.style.display !== 'none') { welcomeScreen.style.display = 'none'; }
         if (currentChatId === null) { createNewChatSession(prompt || "Chat baru"); }
@@ -70,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         displayUserMessage(prompt);
         chatInput.value = '';
-        chatInput.placeholder = 'Tulis Pertanyaan...';
+        updateSendButtonState();
         
         await fetchAiResponse();
     }
@@ -97,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!lastUserMessage) return;
 
         abortController = new AbortController();
-        stopBtnContainer.style.display = 'flex';
+        setLoadingState(true);
 
         try {
             const response = await fetch('/api/chat', {
@@ -149,15 +158,18 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error("Error fetching AI response:", error);
+                const typingIndicator = document.getElementById('typing-indicator');
+                if(typingIndicator) typingIndicator.remove();
                 displayAiMessage(`Maaf, terjadi kesalahan: ${error.message}`);
             }
         } finally {
-            stopBtnContainer.style.display = 'none';
+            setLoadingState(false);
             attachedFile = null;
             fileInput.value = '';
         }
     }
     
+    // ... (sisa kode seperti handleDynamicClicks, renderSidebar, dll.)
     function handleDynamicClicks(e) {
         const historySpan = e.target.closest('.history-item span');
         if (historySpan) {
@@ -208,7 +220,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === Fungsi Render & UI ===
     function renderSidebar() {
         historyContainer.innerHTML = '';
         if (chatSessions.length > 0) {
@@ -250,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         scrollToBottom();
     }
-    
+
     function displayUserMessage(text) {
         const el = document.createElement('div');
         el.className = 'user-message';
@@ -290,7 +301,41 @@ document.addEventListener('DOMContentLoaded', () => {
         return el;
     }
     
-    // === Fungsi Helper & Manajemen Data ===
+    function updateSendButtonState() {
+        const hasText = chatInput.value.trim().length > 0;
+        voiceBtn.style.display = hasText ? 'none' : 'flex';
+        sendBtn.style.display = hasText ? 'flex' : 'none';
+        
+        if (!sendBtn.querySelector('svg')) {
+             setLoadingState(false); // Pastikan ikon ada saat awal
+        }
+    }
+
+    function setLoadingState(isLoading) {
+        sendBtn.innerHTML = ''; // Selalu bersihkan ikon sebelumnya
+        if (isLoading) {
+            sendBtn.classList.add('loading');
+            const stopIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            stopIcon.setAttribute('class', 'stop-icon');
+            stopIcon.setAttribute('width', '16');
+            stopIcon.setAttribute('height', '16');
+            stopIcon.setAttribute('viewBox', '0 0 24 24');
+            stopIcon.innerHTML = `<rect x="3" y="3" width="18" height="18" fill="white"></rect>`;
+            sendBtn.appendChild(stopIcon);
+        } else {
+            sendBtn.classList.remove('loading');
+            const sendIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            sendIcon.setAttribute('class', 'send-icon');
+            sendIcon.setAttribute('width', '20');
+            sendIcon.setAttribute('height', '20');
+            sendIcon.setAttribute('viewBox', '0 0 24 24');
+            sendIcon.innerHTML = `<line x1="12" y1="19" x2="12" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></line><polyline points="5 12 12 5 19 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
+            sendBtn.appendChild(sendIcon);
+            updateSendButtonState();
+        }
+    }
+
+    // === Fungsi Helper & Lainnya ===
     function startNewChat() { currentChatId = null; renderChat(null); renderSidebar(); closeSidebar(); }
     function createNewChatSession(prompt) {
         currentChatId = `chat_${Date.now()}`;
@@ -331,14 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsDataURL(file);
     }
-    function displayTypingIndicator() {
-        if(document.getElementById('typing-indicator')) return;
-        const el = document.createElement('div');
-        el.className = 'ai-message typing-indicator'; el.id = 'typing-indicator';
-        el.innerHTML = `<span></span><span></span><span></span>`;
-        chatContainer.appendChild(el); scrollToBottom();
-    }
-    function removeTypingIndicator() { document.getElementById('typing-indicator')?.remove(); }
     function scrollToBottom() { chatArea.scrollTop = chatArea.scrollHeight; }
     function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
     function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
@@ -349,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function speakText(text) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Hentikan ucapan sebelumnya
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
             window.speechSynthesis.speak(utterance);

@@ -7,11 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- CSS untuk Syntax Highlighting -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- JS untuk Syntax Highlighting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
@@ -47,10 +45,6 @@
                 <p>AI Assistant Karya Anak Bangsa</p>
             </div>
             <div id="chat-container"></div>
-            <!-- Tombol Stop Generating -->
-            <div class="stop-generating-container" id="stop-generating-container" style="display: none;">
-                <button id="stop-btn">Stop generating</button>
-            </div>
         </main>
 
         <!-- Input Chat Footer -->
@@ -61,8 +55,15 @@
                     <div class="chat-input-inner">
                         <button type="button" class="add-btn" id="attach-btn">+</button>
                         <input type="text" id="chat-input" placeholder="Tulis Pertanyaan..." autocomplete="off">
-                        <button type="button" class="voice-btn" id="voice-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg></button>
-                        <button type="submit" class="send-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+                        <!-- Kontainer baru untuk tombol kanan -->
+                        <div class="right-buttons">
+                            <button type="button" class="voice-btn" id="voice-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+                            </button>
+                            <button type="submit" class="send-btn" id="send-btn">
+                                <!-- Ikon akan di-generate oleh JS -->
+                            </button>
+                        </div>
                     </div>
                 </div>
             </form>
