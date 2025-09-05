@@ -27,13 +27,24 @@ body {
 /* Header */
 .app-header { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; width: 100%; z-index: 10; }
 .menu-icon, .new-chat-icon { cursor: pointer; color: var(--text-color); }
-.model-badge { display: flex; align-items: center; background-color: var(--header-badge-bg); padding: 6px 14px; border-radius: 20px; font-size: 15px; font-weight: 500; }
 
-/* PERUBAHAN UKURAN LOGO HEADER ATAS DI SINI */
+/* PERBAIKAN KUNCI ADA DI SINI */
+.model-badge {
+    display: flex;
+    align-items: center;
+    background-color: var(--header-badge-bg);
+    /* Padding vertikal dikurangi untuk mengimbangi ukuran logo yang membesar */
+    padding: 4px 14px; /* Dari 6px 14px */
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Ukuran logo di header atas diperbesar */
 .model-badge .logo-small {
-    width: 40px; /* Dari 26px */
-    height: 40px; /* Dari 26px */
-    margin-right: 10px;
+    width: 30px;
+    height: 30px;
+    margin-right: 8px; /* Jarak dikurangi sedikit agar pas */
     object-fit: cover;
 }
 
@@ -54,10 +65,10 @@ body {
 .ai-message { align-self: flex-start; text-align: left; }
 .ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 500; font-size: 16px; }
 
-/* PERUBAHAN UKURAN LOGO BALASAN CHAT DI SINI */
+/* Ukuran logo di balasan chat juga disamakan */
 .ai-header .logo-small {
-    width: 35px; /* Dari 28px */
-    height: 35px; /* Dari 28px */
+    width: 30px;
+    height: 30px;
     margin-right: 6px;
 }
 
@@ -93,6 +104,4 @@ body {
 .sidebar-header h2 { font-size: 24px; }
 .close-btn { background: none; border: none; color: var(--text-color); font-size: 32px; cursor: pointer; }
 .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 99; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; }
-
 .overlay.active { opacity: 1; visibility: visible; }
-
