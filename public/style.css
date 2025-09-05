@@ -44,7 +44,7 @@ body {
 .model-badge .logo-small {
     width: 20px;
     height: 20px;
-    margin-right: 8px; /* Jarak dikurangi sedikit agar pas */
+    margin-right: 15px; /* Jarak dikurangi sedikit agar pas */
     object-fit: cover;
 }
 
@@ -69,7 +69,7 @@ body {
 .ai-header .logo-small {
     width: 50px;
     height: 50px;
-    margin-right: 5px;
+    margin-right: 10px;
 }
 
 .ai-response-content p { margin-bottom: 12px; }
@@ -106,4 +106,5 @@ body {
 .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 99; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; }
 
 .overlay.active { opacity: 1; visibility: visible; }
+
 
