@@ -5,20 +5,13 @@
     --header-badge-bg: #2A2A2A;
     --sidebar-bg: #18181A;
     --app-bg: #000000;
+    --action-button-bg: #2A2A2A;
+    --share-button-bg: #3A3A3C;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* Menggunakan unit dvh untuk penyesuaian viewport mobile yang lebih baik */
-html, body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-}
+html, body { height: 100%; width: 100%; overflow: hidden; }
 
 body {
     font-family: 'Inter', sans-serif;
@@ -29,100 +22,58 @@ body {
     align-items: center;
 }
 
-.app-container {
-    width: 100%;
-    max-width: 480px;
-    height: 100%; /* Mengisi tinggi body */
-    background-color: var(--app-bg);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    border-radius: 20px;
-    overflow: hidden; /* Mencegah elemen keluar dari kontainer */
-}
+.app-container { width: 100%; max-width: 480px; height: 100%; background-color: var(--app-bg); display: flex; flex-direction: column; position: relative; border-radius: 20px; overflow: hidden; }
 
 /* Header */
-.app-header {
-    flex-shrink: 0; /* Mencegah header menyusut */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    width: 100%;
-    z-index: 10;
-}
+.app-header { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; width: 100%; z-index: 10; }
 .menu-icon, .new-chat-icon { cursor: pointer; color: var(--text-color); }
-.model-badge { display: flex; align-items: center; background-color: var(--header-badge-bg); padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500; }
-.logo-small { width: 24px; height: 24px; margin-right: 8px; object-fit: cover; }
+.model-badge { display: flex; align-items: center; background-color: var(--header-badge-bg); padding: 6px 14px; border-radius: 20px; font-size: 15px; font-weight: 500; }
+/* OPTIMALISASI LOGO HEADER */
+.logo-small { width: 26px; height: 26px; margin-right: 10px; object-fit: cover; }
+
+/* Area Konten Utama */
+#chat-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; }
+#chat-area::-webkit-scrollbar { display: none; }
+#chat-container { display: flex; flex-direction: column; gap: 24px; }
 
 /* Welcome Screen */
-.welcome-screen {
-    flex-grow: 1; /* Mengambil semua sisa ruang vertikal */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding-bottom: 20px; /* Sedikit ruang dari bawah */
-    overflow: hidden; /* Mencegah kontennya meluap */
-}
-
-/* PERUBAHAN KUNCI: Animasi Gradasi untuk Logo Besar */
-.logo-large {
-    width: 120px;
-    height: 120px;
-    margin-bottom: 24px;
-    
-    /* Terapkan animasi gradasi sebagai background */
-    background: linear-gradient(90deg, #9b59b6, #3498db, #e91e63, #9b59b6);
-    background-size: 300% 100%;
-    animation: gradient-animation 6s linear infinite;
-
-    /* Gunakan logo Anda (harus PNG transparan) sebagai 'mask' */
-    /* PENTING: Ganti 'logo.png' dengan file logo Anda yang backgroundnya transparan */
-    mask-image: url('logo.png');
-    -webkit-mask-image: url('logo.png');
-    mask-size: contain;
-    -webkit-mask-size: contain;
-    mask-repeat: no-repeat;
-    -webkit-mask-repeat: no-repeat;
-    mask-position: center;
-    -webkit-mask-position: center;
-}
-
-
+.welcome-screen { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.logo-large { width: 120px; height: 120px; margin-bottom: 24px; background: linear-gradient(90deg, #9b59b6, #3498db, #e91e63, #9b59b6); background-size: 300% 100%; animation: gradient-animation 6s linear infinite; mask-image: url('logo.png'); -webkit-mask-image: url('logo.png'); mask-size: contain; -webkit-mask-size: contain; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; mask-position: center; -webkit-mask-position: center; }
 .welcome-screen h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
 .welcome-screen p { font-size: 16px; color: var(--text-secondary); }
 
+/* --- Gaya Chat --- */
+.user-message, .ai-message { max-width: 90%; line-height: 1.6; }
+.user-message { align-self: flex-end; text-align: right; }
+.ai-message { align-self: flex-start; text-align: left; }
+.ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 500; }
+.ai-header .logo-small { width: 24px; height: 24px; margin-right: 4px; }
+.ai-response-content p { margin-bottom: 12px; }
+.ai-response-content img { max-width: 100%; border-radius: 16px; margin-top: 12px; }
+.action-buttons { display: inline-flex; align-items: center; gap: 6px; background-color: var(--action-button-bg); padding: 6px; border-radius: 24px; margin-top: 8px; }
+.action-buttons button { background: none; border: none; color: var(--text-color); padding: 8px; border-radius: 18px; display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px; }
+.action-buttons button.share-btn { background-color: var(--share-button-bg); padding: 8px 14px; }
+.action-buttons svg { width: 18px; height: 18px; }
+
+/* Typing Indicator */
+.typing-indicator { align-self: flex-start; }
+.typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
 /* Chat Footer */
-.chat-footer {
-    flex-shrink: 0; /* Mencegah footer menyusut */
-    width: 100%;
-    padding: 16px 24px 24px 24px; /* Padding disesuaikan */
-    z-index: 10;
-}
-
-.chat-input-wrapper {
-    padding: 2px;
-    border-radius: 50px;
-    background: linear-gradient(90deg, #9b59b6, #3498db, #e91e63, #9b59b6);
-    background-size: 300% 100%;
-    animation: gradient-animation 6s linear infinite;
-}
-
-@keyframes gradient-animation {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 150% 50%; }
-}
-
+.chat-footer { flex-shrink: 0; width: 100%; padding: 16px 24px 24px 24px; z-index: 10; }
+.chat-input-wrapper { padding: 2px; border-radius: 50px; background: linear-gradient(90deg, #9b59b6, #3498db, #e91e63, #9b59b6); background-size: 300% 100%; animation: gradient-animation 6s linear infinite; }
+@keyframes gradient-animation { 0% { background-position: 0% 50%; } 100% { background-position: 150% 50%; } }
 .chat-input-inner { display: flex; align-items: center; background-color: var(--app-bg); border-radius: 48px; padding: 6px; }
 .chat-input-inner input { flex-grow: 1; background: none; border: none; outline: none; color: var(--text-color); font-size: 16px; padding: 10px 5px; }
 .chat-input-inner input::placeholder { color: #8E8E93; }
-.add-btn, .send-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
-.add-btn { font-size: 28px; font-weight: 300; margin-right: 4px; }
+.add-btn, .voice-btn, .send-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; }
+.add-btn { font-size: 28px; font-weight: 300; }
 .send-btn { color: var(--text-color); }
 
-/* Sidebar & Overlay (Tidak ada perubahan) */
+/* Sidebar & Overlay */
 .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background-color: var(--sidebar-bg); z-index: 100; transform: translateX(-100%); transition: transform 0.3s ease-in-out; padding: 20px; }
 .sidebar.open { transform: translateX(0); }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
