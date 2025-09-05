@@ -28,23 +28,23 @@ body {
 .app-header { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; width: 100%; z-index: 10; }
 .menu-icon, .new-chat-icon { cursor: pointer; color: var(--text-color); }
 
-/* PERBAIKAN KUNCI ADA DI SINI */
+/* --- OPTIMALISASI HEADER ATAS --- */
 .model-badge {
     display: flex;
     align-items: center;
     background-color: var(--header-badge-bg);
-    /* Padding vertikal dikurangi untuk mengimbangi ukuran logo yang membesar */
-    padding: 4px 14px; /* Dari 6px 14px */
+    /* Padding diatur ulang agar badge lebih ramping dan pas */
+    padding: 5px 12px 5px 8px; 
     border-radius: 20px;
     font-size: 15px;
     font-weight: 500;
 }
 
-/* Ukuran logo di header atas diperbesar */
 .model-badge .logo-small {
-    width: 20px;
-    height: 20px;
-    margin-right: 15px; /* Jarak dikurangi sedikit agar pas */
+    /* Ukuran logo disesuaikan agar tidak terlalu besar di dalam badge */
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
     object-fit: cover;
 }
 
@@ -63,13 +63,21 @@ body {
 .user-message, .ai-message { max-width: 90%; line-height: 1.6; }
 .user-message { align-self: flex-end; text-align: right; }
 .ai-message { align-self: flex-start; text-align: left; }
-.ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 500; font-size: 16px; }
 
-/* Ukuran logo di balasan chat juga disamakan */
+/* --- PERBAIKAN JARAK DI BALASAN CHAT --- */
+.ai-header {
+    display: flex;
+    align-items: center;
+    /* Gap/jarak dikurangi agar logo dan teks lebih rapat */
+    gap: 6px; /* Dari 8px */
+    margin-bottom: 12px;
+    font-weight: 500;
+    font-size: 16px;
+}
+
 .ai-header .logo-small {
-    width: 50px;
-    height: 50px;
-    margin-right: 10px;
+    width: 30px;
+    height: 30px;
 }
 
 .ai-response-content p { margin-bottom: 12px; }
@@ -104,7 +112,4 @@ body {
 .sidebar-header h2 { font-size: 24px; }
 .close-btn { background: none; border: none; color: var(--text-color); font-size: 32px; cursor: pointer; }
 .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 99; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; }
-
 .overlay.active { opacity: 1; visibility: visible; }
-
-
