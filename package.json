@@ -1,12 +1,7 @@
 {
-  "name": "qwen-3.5-vercel-api",
+  "name": "gemini-ai-assistant-backend",
   "version": "1.0.0",
-  "description": "Vercel serverless function for Qwen 3.5 Gemini API integration",
-  "main": "api/chat.js",
-  "scripts": {
-    "start": "vercel dev"
-  },
   "dependencies": {
-    "@google/generative-ai": "^0.1.3"
+    "@google/generative-ai": "^0.11.1"
   }
 }
