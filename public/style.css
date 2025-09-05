@@ -42,8 +42,8 @@ body {
 
 /* Ukuran logo di header atas diperbesar */
 .model-badge .logo-small {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     margin-right: 8px; /* Jarak dikurangi sedikit agar pas */
     object-fit: cover;
 }
@@ -67,8 +67,8 @@ body {
 
 /* Ukuran logo di balasan chat juga disamakan */
 .ai-header .logo-small {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
     margin-right: 6px;
 }
 
@@ -104,4 +104,5 @@ body {
 .sidebar-header h2 { font-size: 24px; }
 .close-btn { background: none; border: none; color: var(--text-color); font-size: 32px; cursor: pointer; }
 .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 99; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out; }
+
 .overlay.active { opacity: 1; visibility: visible; }
