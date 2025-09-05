@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // === Elemen DOM ===
+    // ... (semua elemen DOM dan state aplikasi tetap sama) ...
     const menuIcon = document.getElementById('menu-icon');
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
@@ -16,14 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const voiceBtn = document.getElementById('voice-btn');
     const sendBtn = document.getElementById('send-btn');
     
-    // === State Aplikasi ===
     let chatSessions = [];
     let currentChatId = null;
     let attachedFile = null;
     let abortController = new AbortController();
     let isRecognizing = false;
 
-    // === Inisialisasi Aplikasi ===
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
     if (SpeechRecognition) {
@@ -41,9 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentChatId && chatSessions.length > 0) { currentChatId = chatSessions[0].id; }
     renderSidebar();
     renderChat(currentChatId);
-    updateSendButtonState(); // Panggil saat awal
+    updateSendButtonState();
 
-    // === Event Listeners ===
     menuIcon.addEventListener('click', openSidebar);
     closeBtn.addEventListener('click', closeSidebar);
     overlay.addEventListener('click', closeSidebar);
@@ -55,15 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sendBtn.addEventListener('click', handleSendOrStop);
     chatInput.addEventListener('input', updateSendButtonState);
     document.body.addEventListener('click', handleDynamicClicks);
-
-    // === Fungsi Logika Utama ===
-
-    function handleSendOrStop(e) {
-        if (sendBtn.classList.contains('loading')) {
-            e.preventDefault();
-            abortController.abort();
-        }
-    }
 
     async function handleFormSubmit(e) {
         e.preventDefault();
@@ -84,26 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchAiResponse();
     }
     
-    async function fetchAiResponse(isRegenerating = false) {
+    // [PEROMBAKAN UTAMA] Fungsi ini sekarang menangani sinyal dari backend
+    async function fetchAiResponse() {
         const currentSession = getSessionById(currentChatId);
         if (!currentSession) return;
-
-        let lastUserMessage, historyForApi;
-        
-        if (isRegenerating) {
-            currentSession.messages = currentSession.messages.filter(m => m.role === "user");
-            lastUserMessage = currentSession.messages[currentSession.messages.length - 1];
-            historyForApi = currentSession.messages.slice(0, -1);
-            
-            const aiMessages = chatContainer.querySelectorAll('.ai-message');
-            if (aiMessages.length > 0) aiMessages[aiMessages.length - 1].remove();
-
-        } else {
-            lastUserMessage = currentSession.messages[currentSession.messages.length - 1];
-            historyForApi = currentSession.messages.slice(0, -1);
-        }
-
-        if (!lastUserMessage) return;
 
         abortController = new AbortController();
         setLoadingState(true);
@@ -114,10 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 signal: abortController.signal,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    prompt: lastUserMessage.parts[0].text,
-                    history: historyForApi,
-                    fileData: attachedFile ? attachedFile.data : null,
-                    mimeType: attachedFile ? attachedFile.mimeType : null,
+                    prompt: currentSession.messages.filter(m => m.role === 'user').pop()?.parts[0].text || '',
+                    history: currentSession.messages.slice(0, -1),
                 })
             });
 
@@ -126,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let fullResponse = "";
-            let aiMessageElement = displayAiMessage("", true);
+            let aiMessageElement = null;
             let buffer = "";
 
             while (true) {
@@ -139,17 +109,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 for(let i = 0; i < lines.length - 1; i++) {
                     const line = lines[i];
                     if (line.startsWith('data: ')) {
-                        const chunk = JSON.parse(line.substring(6));
-                        fullResponse += chunk;
-                        aiMessageElement.querySelector('.ai-response-content').innerHTML = marked.parse(fullResponse);
-                        scrollToBottom();
+                        const data = JSON.parse(line.substring(6));
+                        
+                        if (data.type === 'tool_code') {
+                            displaySearchIndicator(data.query);
+                        } 
+                        else if (data.type === 'text') {
+                            if (!aiMessageElement) {
+                                removeSearchIndicator();
+                                aiMessageElement = displayAiMessage("", true);
+                            }
+                            fullResponse += data.content;
+                            aiMessageElement.querySelector('.ai-response-content').innerHTML = marked.parse(fullResponse);
+                            scrollToBottom();
+                        }
                     }
                 }
                 buffer = lines[lines.length - 1];
             }
             
-            aiMessageElement.dataset.rawText = fullResponse;
-            aiMessageElement.querySelectorAll('pre code').forEach((block) => { hljs.highlightElement(block); });
+            if (aiMessageElement) {
+                aiMessageElement.dataset.rawText = fullResponse;
+                aiMessageElement.querySelectorAll('pre code').forEach((block) => { hljs.highlightElement(block); });
+            }
             
             const aiMessage = { role: "model", parts: [{ text: fullResponse }] };
             addMessageToSession(currentChatId, aiMessage);
@@ -158,42 +140,51 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error("Error fetching AI response:", error);
-                const typingIndicator = document.getElementById('typing-indicator');
-                if(typingIndicator) typingIndicator.remove();
                 displayAiMessage(`Maaf, terjadi kesalahan: ${error.message}`);
             }
         } finally {
             setLoadingState(false);
+            removeSearchIndicator();
             attachedFile = null;
             fileInput.value = '';
         }
     }
     
-    // ... (sisa kode seperti handleDynamicClicks, renderSidebar, dll.)
+    // [BARU] Fungsi untuk menampilkan indikator pencarian
+    function displaySearchIndicator(query) {
+        removeSearchIndicator(); // Hapus yang lama jika ada
+        const el = document.createElement('div');
+        el.id = 'search-indicator';
+        el.className = 'search-indicator';
+        el.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="M12 18v4"/><path d="m19.07 19.07-2.83-2.83"/><path d="M22 12h-4"/><path d="m19.07 4.93-2.83 2.83"/></svg>
+            <span>Mencari di Google: "${query}"</span>`;
+        chatContainer.appendChild(el);
+        scrollToBottom();
+    }
+    
+    // [BARU] Fungsi untuk menghapus indikator pencarian
+    function removeSearchIndicator() {
+        const indicator = document.getElementById('search-indicator');
+        if (indicator) indicator.remove();
+    }
+    
+    // ... (sisa kode lengkap dari jawaban sebelumnya)
+    function handleSendOrStop(e) { if (sendBtn.classList.contains('loading')) { e.preventDefault(); abortController.abort(); } }
     function handleDynamicClicks(e) {
         const historySpan = e.target.closest('.history-item span');
-        if (historySpan) {
-            currentChatId = historySpan.parentElement.dataset.id;
-            renderChat(currentChatId);
-            renderSidebar();
-            closeSidebar();
-        }
-        
+        if (historySpan) { currentChatId = historySpan.parentElement.dataset.id; renderChat(currentChatId); renderSidebar(); closeSidebar(); }
         const menuDots = e.target.closest('.menu-dots');
         if (menuDots) {
             e.stopPropagation();
             const menu = menuDots.nextElementSibling;
             document.querySelectorAll('.menu-options').forEach(m => { if (m !== menu) m.style.display = 'none'; });
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        } else {
-             document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
-        }
-        
+        } else { document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none'); }
         const deleteBtn = e.target.closest('.delete-btn');
         if (deleteBtn) { deleteSession(deleteBtn.parentElement.dataset.id); }
         const exportBtn = e.target.closest('.export-btn');
         if (exportBtn) { exportSession(exportBtn.parentElement.dataset.id); }
-        
         const copyBtn = e.target.closest('.copy-btn');
         if (copyBtn) {
             const textToCopy = copyBtn.closest('.ai-message').dataset.rawText;
@@ -219,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
             speakText(textToSpeak);
         }
     }
-
     function renderSidebar() {
         historyContainer.innerHTML = '';
         if (chatSessions.length > 0) {
@@ -245,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
             historyContainer.appendChild(list);
         }
     }
-    
     function renderChat(id) {
         chatContainer.innerHTML = '';
         const session = getSessionById(id);
@@ -261,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         scrollToBottom();
     }
-
     function displayUserMessage(text) {
         const el = document.createElement('div');
         el.className = 'user-message';
@@ -269,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.appendChild(el);
         scrollToBottom();
     }
-    
     function displayAiMessage(text, isStreaming = false) {
         const el = document.createElement('div');
         el.className = 'ai-message';
@@ -287,38 +274,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button title="Salin" class="copy-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
                 <button title="Dengarkan" class="speak-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
             </div>`;
-        if (isStreaming) {
-            chatContainer.appendChild(el);
-        } else {
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                chatContainer.insertBefore(el, typingIndicator);
-            } else {
-                chatContainer.appendChild(el);
-            }
-        }
+        chatContainer.appendChild(el);
         scrollToBottom();
         return el;
     }
-    
     function updateSendButtonState() {
         const hasText = chatInput.value.trim().length > 0;
         voiceBtn.style.display = hasText ? 'none' : 'flex';
         sendBtn.style.display = hasText ? 'flex' : 'none';
-        
         if (!sendBtn.querySelector('svg')) {
-             setLoadingState(false); // Pastikan ikon ada saat awal
+             setLoadingState(false);
         }
     }
-
     function setLoadingState(isLoading) {
-        sendBtn.innerHTML = ''; // Selalu bersihkan ikon sebelumnya
+        sendBtn.innerHTML = '';
         if (isLoading) {
             sendBtn.classList.add('loading');
             const stopIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             stopIcon.setAttribute('class', 'stop-icon');
-            stopIcon.setAttribute('width', '16');
-            stopIcon.setAttribute('height', '16');
+            stopIcon.setAttribute('width', '16'); stopIcon.setAttribute('height', '16');
             stopIcon.setAttribute('viewBox', '0 0 24 24');
             stopIcon.innerHTML = `<rect x="3" y="3" width="18" height="18" fill="white"></rect>`;
             sendBtn.appendChild(stopIcon);
@@ -326,16 +300,13 @@ document.addEventListener('DOMContentLoaded', () => {
             sendBtn.classList.remove('loading');
             const sendIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             sendIcon.setAttribute('class', 'send-icon');
-            sendIcon.setAttribute('width', '20');
-            sendIcon.setAttribute('height', '20');
+            sendIcon.setAttribute('width', '20'); sendIcon.setAttribute('height', '20');
             sendIcon.setAttribute('viewBox', '0 0 24 24');
             sendIcon.innerHTML = `<line x1="12" y1="19" x2="12" y2="5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></line><polyline points="5 12 12 5 19 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>`;
             sendBtn.appendChild(sendIcon);
             updateSendButtonState();
         }
     }
-
-    // === Fungsi Helper & Lainnya ===
     function startNewChat() { currentChatId = null; renderChat(null); renderSidebar(); closeSidebar(); }
     function createNewChatSession(prompt) {
         currentChatId = `chat_${Date.now()}`;

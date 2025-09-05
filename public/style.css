@@ -1,3 +1,4 @@
+/* ... (semua CSS sebelumnya dari :root sampai .ai-header .logo-small) ... */
 :root {
     --bg-color: #080414;
     --text-color: #E0E0E0;
@@ -31,6 +32,24 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .ai-message { align-self: flex-start; text-align: left; }
 .ai-header { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; font-weight: 500; font-size: 16px; }
 .ai-header .logo-small { width: 30px; height: 30px; }
+/* [BARU] Style untuk Indikator Pencarian */
+.search-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background-color: var(--action-button-bg);
+    border-radius: 8px;
+}
+.search-indicator svg {
+    width: 16px;
+    height: 16px;
+    animation: spin 1.5s linear infinite;
+}
+/* ... (sisa CSS tidak berubah) ... */
 .ai-response-content img { max-width: 100%; border-radius: 16px; margin-top: 12px; }
 .ai-response-content p { margin-bottom: 12px; }
 .ai-response-content strong, .ai-response-content b { font-weight: 700; color: #fff; }
