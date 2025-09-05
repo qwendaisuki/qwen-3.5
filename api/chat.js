@@ -1,45 +1,37 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// Mengimpor library Google Generative AI
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Mengambil API Key dari environment variable Vercel
-const API_KEY = process.env.GEMINI_API_KEY;
+// Inisialisasi model dengan API Key dari Vercel Environment Variables
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Pastikan API Key tersedia
-if (!API_KEY) {
-    console.error("GEMINI_API_KEY is not set in environment variables.");
-    // Ini akan melempar error saat deploy jika key tidak ada
-    throw new Error("GEMINI_API_KEY is not set.");
-}
-
-const genAI = new GoogleGenerativeAI(API_KEY);
-
-// Model ID untuk Gemini 2.5 Flash.
-// Pastikan ini sesuai dengan model yang ingin Anda gunakan.
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Atau "gemini-1.5-flash"
-
+// Fungsi utama yang akan dijalankan oleh Vercel
 export default async function handler(req, res) {
-    if (req.method === 'POST') {
-        const { prompt } = req.body;
+  // Hanya izinkan metode POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
 
-        if (!prompt) {
-            return res.status(400).json({ error: 'Prompt is required' });
-        }
+  try {
+    // Ambil prompt dari body permintaan yang dikirim dari frontend
+    const { prompt } = req.body;
 
-        try {
-            const result = await model.generateContent(prompt);
-            const response = await result.response;
-            const text = response.text();
-
-            return res.status(200).json({ response: text });
-        } catch (error) {
-            console.error('Error calling Gemini API:', error);
-            // Log detail error dari Google API jika ada
-            if (error.response && error.response.data) {
-                console.error("Gemini API Error Details:", error.response.data);
-            }
-            return res.status(500).json({ error: 'Failed to get response from AI', details: error.message });
-        }
-    } else {
-        res.setHeader('Allow', ['POST']);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
     }
+
+    // Pilih model Gemini yang akan digunakan
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // Hasilkan konten berdasarkan prompt
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Kirim balasan sebagai JSON
+    res.status(200).json({ text: text });
+
+  } catch (error) {
+    console.error("Error calling Gemini API:", error);
+    res.status(500).json({ error: 'Failed to generate content from AI' });
+  }
 }
