@@ -1,33 +1,47 @@
-// Mengimpor library Google Generative AI
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Inisialisasi model dengan API Key dari Vercel Environment Variables
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Fungsi utama yang akan dijalankan oleh Vercel
+function fileToGenerativePart(fileData, mimeType) {
+  return {
+    inlineData: {
+      data: fileData.replace(/^data:[^;]+;base64,/, ''),
+      mimeType,
+    },
+  };
+}
+
 export default async function handler(req, res) {
-  // Hanya izinkan metode POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    // Ambil prompt dari body permintaan yang dikirim dari frontend
-    const { prompt } = req.body;
+    const { prompt, history, fileData, mimeType } = req.body;
 
-    if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
+    if (!prompt && !fileData) { // Membutuhkan prompt atau file
+      return res.status(400).json({ error: 'Prompt or file is required' });
     }
 
-    // Pilih model Gemini yang akan digunakan
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        systemInstruction: "You are Qwen, a helpful and friendly AI assistant. Your responses should be well-structured, informative, and adapt to the user's tone. Use Markdown for formatting when appropriate.",
+    });
 
-    // Hasilkan konten berdasarkan prompt
-    const result = await model.generateContent(prompt);
+    const chat = model.startChat({
+        history: history || [],
+    });
+
+    const parts = [{ text: prompt }];
+    
+    if (fileData && mimeType) {
+      parts.unshift(fileToGenerativePart(fileData, mimeType));
+    }
+    
+    const result = await chat.sendMessage(parts);
     const response = await result.response;
     const text = response.text();
 
-    // Kirim balasan sebagai JSON
     res.status(200).json({ text: text });
 
   } catch (error) {
