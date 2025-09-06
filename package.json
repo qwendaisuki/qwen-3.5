@@ -1,20 +1,12 @@
 {
-  "name": "qwen-clone-project",
+  "name": "qwen-3.5-vercel-api",
   "version": "1.0.0",
-  "description": "AI Assistant with Memory and Search capabilities.",
-  "main": "index.js",
+  "description": "Vercel serverless function for Qwen 3.5 Gemini API integration",
+  "main": "api/chat.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "vercel dev"
   },
-  "keywords": [
-    "ai",
-    "chat",
-    "gemini",
-    "serper"
-  ],
-  "author": "qwen",
-  "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.12.0"
+    "@google/generative-ai": "^0.12.0" 
   }
 }
