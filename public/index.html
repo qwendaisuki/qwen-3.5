@@ -1,150 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qwen 3.5 - Your AI Assistant</title>
+    <title>Qwen 3.5 Assistant</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Ikon dari Font Awesome untuk kemudahan -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Library untuk Markdown Rendering -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Right Sidebar (mirip Monica) -->
-        <aside class="sidebar-right">
-            <div class="sidebar-item active">
-                <i class="fas fa-comment-dots"></i>
-                <span>Chat</span>
-            </div>
-            <!-- NEW: Tombol New Chat -->
-            <div class="sidebar-item" id="new-chat-button">
-                <i class="fas fa-plus-circle"></i>
-                <span>New Chat</span>
-            </div>
-            <div class="sidebar-item">
-                <i class="fas fa-robot"></i>
-                <span>Bots</span>
-            </div>
-            <div class="sidebar-item">
-                <i class="fas fa-search"></i>
-                <span>Search</span>
-            </div>
-            <div class="sidebar-item">
-                <i class="fas fa-book-reader"></i>
-                <span>Read</span>
-            </div>
-            <div class="sidebar-item">
-                <i class="fas fa-pen-nib"></i>
-                <span>Write</span>
-            </div>
-            <div class="sidebar-item">
-                <i class="fas fa-ellipsis-h"></i>
-                <span>More</span>
-            </div>
-            <div class="sidebar-item bottom-spacer"></div> <!-- Spacer untuk mendorong profil ke bawah -->
-            <div class="sidebar-item profile">
-                <div class="profile-avatar">Q</div>
-                <span>Profile</span>
-            </div>
-        </aside>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <div class="chat-header">
-                <h1>Hi Bro! <span class="wave-emoji">👋</span></h1>
-                <p>How can I help you today?</p>
-            </div>
-
-            <div class="action-buttons-grid">
-                <button class="action-button">
-                    <i class="fas fa-search"></i>
-                    AI Search
-                </button>
-                <button class="action-button">
-                    <i class="fas fa-upload"></i>
-                    Upload Files
-                </button>
-                <button class="action-button">
-                    <i class="fas fa-pen-fancy"></i>
-                    Writing Agent
-                </button>
-                <button class="action-button">
-                    <i class="fas fa-palette"></i>
-                    Artist
-                </button>
-            </div>
-
-            <p class="suggestions-label">You can also ask me like this</p>
-
-            <div class="suggested-prompts-grid">
-                <div class="suggested-prompt">
-                    <p>Search for AI News</p>
-                    <span>use <span class="skill-tag">@Web Access skill</span></span>
-                    <i class="fas fa-redo-alt reload-icon"></i>
-                </div>
-                <div class="suggested-prompt">
-                    <p>Read a new paper</p>
-                    <span>use <span class="skill-tag">@Set a task reminder skill</span></span>
-                    <i class="fas fa-redo-alt reload-icon"></i>
-                </div>
-                <div class="suggested-prompt">
-                    <p>Prepare bullet points</p>
-                    <span>for a podcast interview on digital nomad life</span>
-                    <i class="fas fa-redo-alt reload-icon"></i>
-                </div>
-            </div>
-
-            <button class="add-skills-button">
-                <i class="fas fa-plus-circle"></i>
-                Add Skills
-            </button>
-
-            <!-- Chat History Area (akan diisi oleh JS) -->
-            <div class="chat-history" id="chat-history">
-                <!-- Pesan akan muncul di sini -->
-            </div>
-        </main>
-
-        <!-- Input Area at the Bottom -->
-        <div class="input-area">
-            <div class="input-controls-top">
-                <div class="dropdown">
-                    <i class="fas fa-robot"></i>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <i class="fas fa-book-open"></i>
-                <i class="fas fa-paperclip"></i>
-                <i class="fas fa-cut"></i>
-                <span class="spacer"></span>
-                <i class="fas fa-sliders-h"></i>
-                <i class="fas fa-history"></i>
-                <i class="fas fa-plus-circle"></i>
-            </div>
-            <div class="input-main">
-                <textarea id="user-input" placeholder="Ask me anything, press '/' for prompt"></textarea>
-                <button id="send-button" class="send-button">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-            <div class="input-controls-bottom">
-                <div class="input-actions">
-                    <i class="fas fa-percentage"></i>
-                    <i class="fas fa-at"></i>
-                    <i class="fas fa-microphone"></i>
-                </div>
-                <div class="model-selector">
-                    <span>Gemini 2.5 Flash</span>
-                    <label class="switch">
-                        <input type="checkbox" checked>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-            </div>
+    <!-- Header / Bagian Atas -->
+    <header class="app-header">
+        <div class="header-icon">
+            <!-- Ikon Menu (Hamburger) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </div>
-    </div>
+        
+        <nav class="main-nav">
+            <div class="nav-icon">
+                <!-- Ikon Home -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </div>
+            <div class="nav-avatar">
+                <img src="avatar.png" alt="User Avatar">
+            </div>
+            <div class="nav-icon">
+                <!-- Ikon Tambah -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </div>
+        </nav>
+
+        <div class="header-icon">
+            <!-- Ikon Profil -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="main-content">
+        <img src="qwen-logo.png" alt="Qwen 3.5 Logo" class="logo">
+        <h1 class="title">Qwen 3.5</h1>
+        <p class="subtitle">AI Assistant Karya Anak Bangsa</p>
+    </main>
+
+    <!-- Footer / Input Pengguna -->
+    <footer class="app-footer">
+        <form class="input-form">
+            <div class="input-container">
+                <button type="button" class="icon-button">
+                    <!-- Ikon Tambah dalam Input -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+                <input type="text" placeholder="Tulis pertanyaan...">
+                <button type="button" class="icon-button">
+                    <!-- Ikon Suara -->
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                </button>
+                <button type="submit" class="icon-button send-button">
+                    <!-- Ikon Kirim -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </form>
+    </footer>
 
     <script src="script.js"></script>
 </body>
