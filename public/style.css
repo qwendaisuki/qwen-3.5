@@ -71,6 +71,7 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .voice-btn.listening svg { color: var(--stop-color); animation: pulse 1.5s infinite; }
 @keyframes pulse { 0% { transform: scale(1) } 50% { transform: scale(1.1) } 100% { transform: scale(1) } }
 .send-btn { color: var(--text-color); background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; position: relative; transition: all .3s ease; border-radius: 50%; }
+.send-btn { display: none; } /* <-- TAMBAHAN: Sembunyikan tombol send awalnya */
 .send-btn svg { position: absolute; transition: opacity .2s ease,transform .2s ease; }
 .send-btn.loading { background-color: var(--stop-color); border-radius: 12px; }
 .send-btn.loading .send-icon { opacity: 0; transform: scale(.5); }
