@@ -1,50 +1,45 @@
-// Mengimpor library Google Generative AI
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Fungsi utama yang akan dijalankan oleh Vercel sebagai endpoint API
+// Mengambil API Key dari environment variable Vercel
+const API_KEY = process.env.GEMINI_API_KEY;
+
+// Pastikan API Key tersedia
+if (!API_KEY) {
+    console.error("GEMINI_API_KEY is not set in environment variables.");
+    // Ini akan melempar error saat deploy jika key tidak ada
+    throw new Error("GEMINI_API_KEY is not set.");
+}
+
+const genAI = new GoogleGenerativeAI(API_KEY);
+
+// Model ID untuk Gemini 2.5 Flash.
+// Pastikan ini sesuai dengan model yang ingin Anda gunakan.
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Atau "gemini-1.5-flash"
+
 export default async function handler(req, res) {
-  // Hanya izinkan permintaan dengan metode POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+    if (req.method === 'POST') {
+        const { prompt } = req.body;
 
-  try {
-    // --- PERUBAHAN DI SINI: Instruksi sistem sekarang bagian dari konfigurasi model ---
-    const systemInstruction = {
-      role: "model",
-      parts: [{ text: `
-        Anda adalah Qwen, seorang asisten AI yang profesional, ramah, dan sangat membantu.
-        Tugas Anda adalah memberikan respons yang luar biasa dengan mengikuti aturan berikut:
-        1.  Gaya Profesional dan Rapi: Selalu gunakan bahasa yang jelas, terstruktur, dan profesional. Gunakan Markdown (seperti **bold**, *italic*, dan list) untuk membuat teks lebih mudah dibaca.
-        2.  Gunakan Emoji dengan Wajar: Tambahkan emoji yang relevan untuk membuat respons terasa lebih hidup dan ramah, tapi jangan berlebihan. Contoh: "Tentu, saya bisa bantu! 😊" atau "Berikut adalah beberapa poin penting: 📝".
-        3.  Berikan Saran Proaktif: Jika relevan, berikan saran tambahan atau ide terkait dengan pertanyaan pengguna. Tunjukkan bahwa Anda berpikir selangkah lebih maju.
-        4.  Ajukan Pertanyaan Balik: Untuk menjaga percakapan tetap berjalan dan memahami kebutuhan pengguna lebih dalam, akhiri respons Anda dengan pertanyaan balik yang relevan. Contoh: "Apakah ada hal lain yang bisa saya jelaskan?" atau "Bagaimana rencana Anda selanjutnya terkait informasi ini?".
-      `}],
-    };
-    
-    // Inisialisasi Model Gemini dengan API Key dan instruksi sistem
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: systemInstruction, // Menambahkan instruksi sistem di sini
-    });
+        if (!prompt) {
+            return res.status(400).json({ error: 'Prompt is required' });
+        }
 
-    // Ambil pesan pengguna dari body permintaan
-    const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required.' });
+        try {
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+
+            return res.status(200).json({ response: text });
+        } catch (error) {
+            console.error('Error calling Gemini API:', error);
+            // Log detail error dari Google API jika ada
+            if (error.response && error.response.data) {
+                console.error("Gemini API Error Details:", error.response.data);
+            }
+            return res.status(500).json({ error: 'Failed to get response from AI', details: error.message });
+        }
+    } else {
+        res.setHeader('Allow', ['POST']);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-
-    // Hasilkan konten HANYA berdasarkan pesan pengguna
-    const result = await model.generateContent(message);
-    const response = await result.response;
-    const text = response.text();
-
-    // Kirim kembali respons dari AI ke frontend
-    res.status(200).json({ reply: text });
-
-  } catch (error) {
-    console.error('Error calling Google AI:', error);
-    res.status(500).json({ error: 'An error occurred while communicating with the AI.' });
-  }
 }
