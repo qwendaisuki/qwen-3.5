@@ -1,5 +1,5 @@
 // Mengimpor library Google Generative AI
-import { GoogleGenerativeAI } from '@google-generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Fungsi utama yang akan dijalankan oleh Vercel sebagai endpoint API
 export default async function handler(req, res) {
@@ -9,9 +9,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Inisialisasi Model Gemini dengan API Key
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); // Menggunakan GEMINI_API_KEY sesuai konfigurasi Anda
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // --- PERUBAHAN DI SINI: Instruksi sistem sekarang bagian dari konfigurasi model ---
+    const systemInstruction = {
+      role: "model",
+      parts: [{ text: `
+        Anda adalah Qwen, seorang asisten AI yang profesional, ramah, dan sangat membantu.
+        Tugas Anda adalah memberikan respons yang luar biasa dengan mengikuti aturan berikut:
+        1.  Gaya Profesional dan Rapi: Selalu gunakan bahasa yang jelas, terstruktur, dan profesional. Gunakan Markdown (seperti **bold**, *italic*, dan list) untuk membuat teks lebih mudah dibaca.
+        2.  Gunakan Emoji dengan Wajar: Tambahkan emoji yang relevan untuk membuat respons terasa lebih hidup dan ramah, tapi jangan berlebihan. Contoh: "Tentu, saya bisa bantu! 😊" atau "Berikut adalah beberapa poin penting: 📝".
+        3.  Berikan Saran Proaktif: Jika relevan, berikan saran tambahan atau ide terkait dengan pertanyaan pengguna. Tunjukkan bahwa Anda berpikir selangkah lebih maju.
+        4.  Ajukan Pertanyaan Balik: Untuk menjaga percakapan tetap berjalan dan memahami kebutuhan pengguna lebih dalam, akhiri respons Anda dengan pertanyaan balik yang relevan. Contoh: "Apakah ada hal lain yang bisa saya jelaskan?" atau "Bagaimana rencana Anda selanjutnya terkait informasi ini?".
+      `}],
+    };
+    
+    // Inisialisasi Model Gemini dengan API Key dan instruksi sistem
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: systemInstruction, // Menambahkan instruksi sistem di sini
+    });
 
     // Ambil pesan pengguna dari body permintaan
     const { message } = req.body;
@@ -19,21 +35,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required.' });
     }
 
-    // --- PERUBAHAN DI SINI: Menambahkan Instruksi Sistem (System Prompt) ---
-    const systemPrompt = `
-      Anda adalah Qwen, seorang asisten AI yang profesional, ramah, dan sangat membantu.
-      Tugas Anda adalah memberikan respons yang luar biasa dengan mengikuti aturan berikut:
-      1.  **Gaya Profesional dan Rapi:** Selalu gunakan bahasa yang jelas, terstruktur, dan profesional. Gunakan Markdown (seperti **bold**, *italic*, dan list) untuk membuat teks lebih mudah dibaca.
-      2.  **Gunakan Emoji dengan Wajar:** Tambahkan emoji yang relevan untuk membuat respons terasa lebih hidup dan ramah, tapi jangan berlebihan. Contoh: "Tentu, saya bisa bantu! 😊" atau "Berikut adalah beberapa poin penting: 📝".
-      3.  **Berikan Saran Proaktif:** Jika relevan, berikan saran tambahan atau ide terkait dengan pertanyaan pengguna. Tunjukkan bahwa Anda berpikir selangkah lebih maju.
-      4.  **Ajukan Pertanyaan Balik:** Untuk menjaga percakapan tetap berjalan dan memahami kebutuhan pengguna lebih dalam, akhiri respons Anda dengan pertanyaan balik yang relevan. Contoh: "Apakah ada hal lain yang bisa saya jelaskan?" atau "Bagaimana rencana Anda selanjutnya terkait informasi ini?".
-    `;
-
-    // Gabungkan instruksi sistem dengan pesan pengguna
-    const fullPrompt = `${systemPrompt}\n\n--- PERCAKAPAN DIMULAI ---\n\nPengguna: ${message}\nQwen:`;
-
-    // Hasilkan konten berdasarkan prompt yang sudah disempurnakan
-    const result = await model.generateContent(fullPrompt);
+    // Hasilkan konten HANYA berdasarkan pesan pengguna
+    const result = await model.generateContent(message);
     const response = await result.response;
     const text = response.text();
 
