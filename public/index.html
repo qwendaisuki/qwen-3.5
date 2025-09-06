@@ -10,51 +10,38 @@
 <body>
 
     <div class="app-container">
-        <!-- Header -->
         <header class="app-header">
-            <button class="icon-btn" aria-label="Menu">
-                <i data-lucide="menu"></i>
-            </button>
+            <button class="icon-btn" aria-label="Menu"><i data-lucide="menu"></i></button>
             <div class="version-selector">
-                <span>Qwen 3.5</span>
-                <i data-lucide="chevron-down"></i>
+                <span>Qwen 3.5</span><i data-lucide="chevron-down"></i>
             </div>
-            <button class="icon-btn" aria-label="Sesi baru">
-                <i data-lucide="plus"></i>
-            </button>
+            <button class="icon-btn" aria-label="Sesi baru"><i data-lucide="plus"></i></button>
         </header>
 
-        <!-- Konten Utama -->
         <main class="main-content">
-            <div class="logo-container">
-                <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#8A2BE2; stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#4169E1; stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <path fill="url(#logo-gradient)" d="M50,5c24.8,0,45,20.2,45,45S74.8,95,50,95C27.5,95,9.4,78.8,5.5,58H25c3.6,12.3,15.3,21,25,21s21.4-8.7,25-21h19.5 C90.6,31.2,72.5,15,50,15S9.4,31.2,5.5,52H0C0,24.8,20.2,5,50,5z M60,65 H40V45h20V65z M60,65 l15,15 H75 V60 L60,45z"/>
-                </svg>
+            <!-- Tampilan awal, akan disembunyikan setelah chat dimulai -->
+            <div id="initial-view">
+                <div class="logo-container">
+                    <img src="/qwen-logo.png" alt="Qwen Logo" class="logo-img">
+                </div>
+                <h1>AI Assistant Karya Anak Bangsa</h1>
+                <p class="version">version 1.0</p>
             </div>
-            <h1>AI Assistant Karya Anak Bangsa</h1>
-            <p class="version">version 1.0</p>
+            
+            <!-- Wadah untuk semua pesan chat -->
+            <div id="chat-container"></div>
         </main>
 
-        <!-- Footer dan Input Chat -->
         <footer class="chat-footer">
+            <!-- Copyright dipindahkan ke sini -->
+            <p class="copyright">2025 By Qwen Inc.</p>
             <div class="chat-input-container">
-                <form class="chat-form">
-                     <button class="icon-btn-input" type="button" aria-label="Tambah file">
-                        <i data-lucide="plus"></i>
-                    </button>
-                    <input type="text" id="chat-input" placeholder="Tulis pesan Anda di sini...">
-                    <button class="icon-btn-input" type="submit" aria-label="Kirim">
-                        <i data-lucide="arrow-up"></i>
-                    </button>
+                <form class="chat-form" id="chat-form">
+                     <button class="icon-btn-input" type="button" aria-label="Tambah file"><i data-lucide="plus"></i></button>
+                    <input type="text" id="chat-input" placeholder="Tulis pesan Anda di sini..." autocomplete="off">
+                    <button class="icon-btn-input" type="submit" aria-label="Kirim"><i data-lucide="arrow-up"></i></button>
                 </form>
             </div>
-             <p class="copyright">2025 Qwen Inc.</p>
         </footer>
     </div>
 
