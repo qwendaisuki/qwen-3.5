@@ -1,6 +1,21 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Fungsi untuk mengekstrak JSON secara aman dari teks
+// Mengambil API Keys dari environment variables Vercel
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const SERPER_API_KEY = process.env.SERPER_API_KEY; // <-- KEY BARU DITAMBAHKAN
+
+// Pastikan semua API Key tersedia
+if (!GEMINI_API_KEY || !SERPER_API_KEY) {
+    const missingKeys = [!GEMINI_API_KEY && "GEMINI_API_KEY", !SERPER_API_KEY && "SERPER_API_KEY"].filter(Boolean).join(", ");
+    console.error(`${missingKeys} is not set in environment variables.`);
+    throw new Error(`API Key is missing: ${missingKeys}`);
+}
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+// Kita tetap gunakan model yang stabil seperti gemini-1.5-flash
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Fungsi bantuan untuk mengekstrak JSON secara aman dari teks balasan AI
 function extractJson(text) {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
@@ -12,108 +27,69 @@ function extractJson(text) {
 }
 
 export default async function handler(req, res) {
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    const serperApiKey = process.env.SERPER_API_KEY;
-
-    if (!geminiApiKey || !serperApiKey) {
-        return res.status(500).json({ error: "Satu atau lebih API key tidak dikonfigurasi." });
-    }
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: "Metode tidak diizinkan." });
+        res.setHeader('Allow', ['POST']);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
-
-    const genAI = new GoogleGenerativeAI(geminiApiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     try {
+        // Sekarang kita juga menerima 'history' dari frontend
         const { prompt, history } = req.body;
-        if (!prompt) return res.status(400).json({ error: "Prompt dibutuhkan." });
 
-        const decisionPrompt = `
-            Analisis pesan terakhir pengguna: "${prompt}".
-            Apakah pertanyaan ini secara eksplisit atau implisit memerlukan informasi terkini (setelah tahun 2023), berita, atau data real-time dari internet?
-            Contoh:
-            - "hallo" -> {"searchQuery": null}
-            - "siapa presiden indonesia sekarang?" -> {"searchQuery": "presiden Indonesia sekarang 2025"}
-            - "buatkan aku puisi" -> {"searchQuery": null}
-            - "apa berita terbaru tentang teknologi AI?" -> {"searchQuery": "berita terbaru teknologi AI 2025"}
-            Balas HANYA dengan format JSON.
-        `;
+        if (!prompt) {
+            return res.status(400).json({ error: 'Prompt is required' });
+        }
+
+        // --- TAHAP 1: AI MEMUTUSKAN APAKAH PERLU MENCARI ---
+        const decisionPrompt = `Analisis pesan pengguna: "${prompt}". Apakah ini membutuhkan informasi terkini (setelah 2023) atau berita? Balas HANYA dengan JSON: {"searchQuery": "kata kunci pencarian"} atau {"searchQuery": null}.`;
         
         const decisionResult = await model.generateContent(decisionPrompt);
         const decision = extractJson(decisionResult.response.text());
         
         let searchResultsContext = "";
-        let isSearching = decision && decision.searchQuery;
-
-        if (isSearching) {
+        
+        // --- TAHAP 2: LAKUKAN PENCARIAN JIKA DIPUTUSKAN PERLU ---
+        if (decision && decision.searchQuery) {
             console.log(`AI memutuskan untuk mencari: "${decision.searchQuery}"`);
-            try {
-                // =======================================================
-                // MENGGANTI AXIOS DENGAN FETCH BAWAAN NODE.JS
-                // =======================================================
-                const searchResponse = await fetch('https://google.serper.dev/search', {
-                    method: 'POST',
-                    headers: {
-                        'X-API-KEY': serperApiKey,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ q: decision.searchQuery })
-                });
+            
+            // Menggunakan fetch bawaan, BUKAN axios
+            const searchResponse = await fetch('https://google.serper.dev/search', {
+                method: 'POST',
+                headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ q: decision.searchQuery })
+            });
 
-                if (!searchResponse.ok) {
-                    throw new Error(`Serper API merespon dengan status: ${searchResponse.status}`);
-                }
-
+            if (searchResponse.ok) {
                 const searchData = await searchResponse.json();
-                // =======================================================
-
-                const topResults = searchData.organic?.slice(0, 5) || [];
+                const topResults = searchData.organic?.slice(0, 4) || []; // Ambil 4 hasil teratas
                 if (topResults.length > 0) {
-                    searchResultsContext = "Berikut adalah hasil pencarian web relevan:\n" + 
+                    searchResultsContext = "Konteks dari pencarian web:\n" + 
                         topResults.map((r, i) => `[Sumber ${i+1}] Judul: ${r.title}\nLink: ${r.link}\nKutipan: ${r.snippet}`).join("\n\n");
                 }
-            } catch (searchError) {
-                console.error("Gagal melakukan pencarian:", searchError.message);
-                searchResultsContext = "Info: Gagal mendapatkan hasil pencarian, jawab berdasarkan pengetahuan yang ada saja.";
+            } else {
+                console.error(`Serper API error: ${searchResponse.status}`);
             }
-        } else {
-            console.log(`AI memutuskan TIDAK perlu mencari.`);
         }
 
+        // --- TAHAP 3: BUAT JAWABAN FINAL DENGAN KONTEKS (JIKA ADA) ---
         const finalSystemPrompt = `
-            Anda adalah Qwen, AI Assistant yang sangat membantu.
-            Selalu berikan jawaban yang rapi dan terstruktur menggunakan format Markdown.
+            Anda adalah Qwen, AI Assistant. Jawab pertanyaan pengguna dengan format Markdown yang rapi.
             ${searchResultsContext 
-                ? `Gunakan informasi dari hasil pencarian web berikut untuk menyusun jawaban Anda. PENTING: Sertakan link sumber yang relevan di akhir jawaban Anda dalam format Markdown, contoh: [Nama Sumber](link). Contoh: "Menurut [Sumber 1], ..."\n\n${searchResultsContext}` 
-                : "Jawab pertanyaan pengguna berdasarkan pengetahuan Anda dan riwayat percakapan."
+                ? `Gunakan informasi dari konteks pencarian web berikut untuk menjawab. Sertakan link sumber yang relevan di akhir jawaban Anda dalam format [Nama Sumber](link).\n\n${searchResultsContext}` 
+                : "Jawab berdasarkan pengetahuan Anda dan riwayat percakapan."
             }
         `;
 
-        const chat = model.startChat({ 
-            history: [
-                ...history,
-                { role: 'user', parts: [{ text: finalSystemPrompt }] },
-                { role: 'model', parts: [{ text: "Siap, saya mengerti instruksi saya." }] }
-            ]
-        });
-        
+        // Memulai chat dengan riwayat dan prompt sistem yang baru
+        const chat = model.startChat({ history: [...history, { role: 'user', parts: [{ text: finalSystemPrompt }] }] });
         const result = await chat.sendMessage(prompt);
         const text = result.response.text();
 
-        res.status(200).json({ reply: text });
+        // Kunci respons diubah menjadi 'reply' agar sesuai dengan script.js frontend
+        return res.status(200).json({ reply: text });
 
     } catch (error) {
-        console.error("Error saat menghasilkan konten:", error.message);
-        res.status(500).json({ error: 'Gagal menghasilkan konten di server.' });
+        console.error('Error in handler:', error);
+        return res.status(500).json({ error: 'Failed to get response from AI', details: error.message });
     }
-}```
-
-### Langkah Terakhir (Paling Penting)
-
-1.  **Ganti isi file `package.json`** Anda dengan kode baru yang sudah disederhanakan.
-2.  **Ganti isi file `api/chat.js`** Anda dengan kode baru yang menggunakan `fetch`.
-3.  **Commit dan Push** kedua perubahan ini ke repositori Anda.
-4.  **Redeploy** proyek Anda di Vercel.
-
-Dengan cara ini, kita sama sekali tidak bergantung pada `axios`, dan error `Cannot find module` itu **pasti akan hilang**. Ini adalah solusi yang paling bersih dan stabil.
+    }
