@@ -302,3 +302,18 @@ input#chat-input::placeholder {
     0% { filter: hue-rotate(0deg); }
     100% { filter: hue-rotate(360deg); }
 }
+
+/* ... (semua kode CSS lama Anda) ... */
+
+/* --- STYLE BARU UNTUK LINK SUMBER --- */
+.message-content a {
+    color: #8ab4f8; /* Warna biru yang enak dilihat di tema gelap */
+    text-decoration: none; /* Hapus garis bawah default */
+    border-bottom: 1px solid #8ab4f8; /* Ganti dengan garis bawah kustom */
+    transition: color 0.2s ease, border-bottom 0.2s ease;
+}
+
+.message-content a:hover {
+    color: #a7c5f9;
+    border-bottom-color: #a7c5f9;
+}
