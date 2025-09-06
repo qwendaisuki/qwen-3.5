@@ -1,7 +1,7 @@
 {
   "name": "qwen-clone-project",
   "version": "1.0.0",
-  "description": "AI Assistant chat interface with Gemini API.",
+  "description": "AI Assistant with Memory, Search, and Markdown capabilities.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,11 +9,13 @@
   "keywords": [
     "ai",
     "chat",
-    "gemini"
+    "gemini",
+    "serper"
   ],
   "author": "Qwen Riz",
   "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.12.0"
+    "@google/generative-ai": "^0.12.0",
+    "axios": "^1.7.2"
   }
 }
