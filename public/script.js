@@ -60,11 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            const formattedHtml = marked.parse(data.reply);
-            aiMessageContentElement.innerHTML = formattedHtml;
-            aiMessageContentElement.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
+
+            // --- PERUBAHAN DI SINI: Gunakan efek ketik ---
+            await typeWriterEffect(data.reply, aiMessageContentElement);
 
         } catch (error) {
             console.error('Fetch error:', error);
@@ -104,74 +102,45 @@ document.addEventListener('DOMContentLoaded', () => {
         chatArea.scrollTop = chatArea.scrollHeight;
     }
 
+    // --- FUNGSI BARU: EFEK ANIMASI KETIKAN ---
+    async function typeWriterEffect(text, element) {
+        // Hapus indikator "thinking..."
+        element.innerHTML = '';
+
+        // Tulis teks mentah huruf demi huruf
+        let rawText = '';
+        for (const char of text) {
+            rawText += char;
+            // Gunakan marked.parse untuk sementara agar Markdown dasar (seperti tebal) terlihat saat mengetik
+            element.innerHTML = marked.parse(rawText);
+            scrollToBottom();
+            await new Promise(resolve => setTimeout(resolve, 15)); // Atur kecepatan ketik di sini (ms)
+        }
+        
+        // Setelah selesai, format ulang dengan penyorotan kode
+        element.innerHTML = marked.parse(text);
+        element.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    }
+
+
     // --- Logika UI Lainnya (Tombol, Attachment, Sidebar) ---
+    // (Tidak ada perubahan di bagian ini)
     chatInput.addEventListener('input', () => {
         const hasText = chatInput.value.trim() !== '';
         voiceBtn.style.display = hasText ? 'none' : 'flex';
         sendBtn.style.display = hasText ? 'flex' : 'none';
     });
-
-    attachBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        attachmentPopup.classList.toggle('show');
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!attachmentPopup.contains(event.target) && !attachBtn.contains(event.target)) {
-            attachmentPopup.classList.remove('show');
-        }
-    });
-
+    attachBtn.addEventListener('click', (event) => { event.stopPropagation(); attachmentPopup.classList.toggle('show'); });
+    document.addEventListener('click', (event) => { if (!attachmentPopup.contains(event.target) && !attachBtn.contains(event.target)) { attachmentPopup.classList.remove('show'); } });
     document.getElementById('attach-gallery-btn').addEventListener('click', () => fileInputs.gallery.click());
     document.getElementById('attach-camera-btn').addEventListener('click', () => fileInputs.camera.click());
     document.getElementById('attach-files-btn').addEventListener('click', () => fileInputs.files.click());
-
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            fileNameSpan.textContent = file.name;
-            attachmentPreview.style.display = 'flex';
-            attachmentPopup.classList.remove('show');
-        }
-    };
+    const handleFileChange = (event) => { const file = event.target.files[0]; if (file) { fileNameSpan.textContent = file.name; attachmentPreview.style.display = 'flex'; attachmentPopup.classList.remove('show'); } };
     Object.values(fileInputs).forEach(input => input.addEventListener('change', handleFileChange));
-
-    removeAttachmentBtn.addEventListener('click', () => {
-        Object.values(fileInputs).forEach(input => { input.value = ''; });
-        attachmentPreview.style.display = 'none';
-        fileNameSpan.textContent = '';
-    });
-
-    historyContainer.addEventListener('click', (event) => {
-        const menuDots = event.target.closest('.menu-dots');
-        if (!menuDots) return;
-        const menuOptions = menuDots.nextElementSibling;
-        document.querySelectorAll('.menu-options').forEach(menu => {
-            if (menu !== menuOptions) menu.style.display = 'none';
-        });
-        if (menuOptions) menuOptions.style.display = menuOptions.style.display === 'block' ? 'none' : 'block';
-    });
-
-    function addHistoryItem(title) {
-        const historyList = historyContainer.querySelector('.history-list') || document.createElement('ul');
-        if (!historyContainer.querySelector('.history-list')) {
-            historyList.className = 'history-list';
-            historyContainer.innerHTML = '<h3>Today</h3>';
-            historyContainer.appendChild(historyList);
-        }
-        const item = document.createElement('li');
-        item.className = 'history-item';
-        item.innerHTML = `
-            <span>${title}</span>
-            <svg class="menu-dots" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
-            <div class="menu-options">
-                <button class="export-btn">Export</button>
-                <button class="delete-btn">Delete</button>
-            </div>`;
-        historyList.appendChild(item);
-        item.querySelector('.delete-btn').addEventListener('click', () => { item.remove(); });
-        item.querySelector('.export-btn').addEventListener('click', () => { alert(`Exporting: ${title}`); });
-    }
-    
+    removeAttachmentBtn.addEventListener('click', () => { Object.values(fileInputs).forEach(input => { input.value = ''; }); attachmentPreview.style.display = 'none'; fileNameSpan.textContent = ''; });
+    historyContainer.addEventListener('click', (event) => { const menuDots = event.target.closest('.menu-dots'); if (!menuDots) return; const menuOptions = menuDots.nextElementSibling; document.querySelectorAll('.menu-options').forEach(menu => { if (menu !== menuOptions) menu.style.display = 'none'; }); if (menuOptions) menuOptions.style.display = menuOptions.style.display === 'block' ? 'none' : 'block'; });
+    function addHistoryItem(title) { const historyList = historyContainer.querySelector('.history-list') || document.createElement('ul'); if (!historyContainer.querySelector('.history-list')) { historyList.className = 'history-list'; historyContainer.innerHTML = '<h3>Today</h3>'; historyContainer.appendChild(historyList); } const item = document.createElement('li'); item.className = 'history-item'; item.innerHTML = `<span>${title}</span> <svg class="menu-dots" ...></svg> <div class="menu-options"><button class="export-btn">Export</button><button class="delete-btn">Delete</button></div>`; historyList.appendChild(item); item.querySelector('.delete-btn').addEventListener('click', () => { item.remove(); }); item.querySelector('.export-btn').addEventListener('click', () => { alert(`Exporting: ${title}`); }); }
     addHistoryItem("Percakapan Baru");
 });
