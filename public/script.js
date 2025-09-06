@@ -67,15 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
         attachmentPopup.classList.toggle('show');
     });
 
-    // Listener global untuk menutup popup/menu saat klik di luar
     document.body.addEventListener('click', (e) => {
-        if (!e.target.closest('.menu-dots')) {
-            document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
-        }
+        handleDynamicClicks(e);
         if (!e.target.closest('.add-btn')) {
             attachmentPopup.classList.remove('show');
         }
-        handleDynamicClicks(e); // Juga jalankan listener dinamis lainnya
     });
 
     attachCameraBtn.addEventListener('click', () => fileInputCamera.click());
@@ -101,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
         displayUserMessage(prompt, attachedFile);
         chatInput.value = '';
         removeAttachment();
-        updateSendButtonState();
         
         await fetchAiResponse();
     }
@@ -113,14 +108,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let lastUserMessage, historyForApi;
         
         if (isRegenerating) {
-            // Hapus balasan AI terakhir dari histori dan DOM
             currentSession.messages.pop(); 
-            lastUserMessage = currentSession.messages[currentSession.messages.length - 1];
-            historyForApi = currentSession.messages.slice(0, -1);
-            
+            lastUserMessage = currentSession.messages.findLast(m => m.role === 'user');
+            historyForApi = currentSession.messages.slice(0, currentSession.messages.lastIndexOf(lastUserMessage));
             const aiMessages = chatContainer.querySelectorAll('.ai-message');
             if (aiMessages.length > 0) aiMessages[aiMessages.length - 1].remove();
-
         } else {
             lastUserMessage = currentSession.messages[currentSession.messages.length - 1];
             historyForApi = currentSession.messages.slice(0, -1);

@@ -26,9 +26,9 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .logo-large { width: 120px; height: 120px; margin-bottom: 24px; background: linear-gradient(90deg, #9b59b6, #3498db, #e91e63, #9b59b6); background-size: 300% 100%; animation: gradient-animation 6s linear infinite; mask-image: url(logo.png); -webkit-mask-image: url(logo.png); mask-size: contain; -webkit-mask-size: contain; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; mask-position: center; -webkit-mask-position: center; }
 .welcome-screen h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
 .welcome-screen p { font-size: 16px; color: var(--text-secondary); }
-.user-message { max-width: 90%; line-height: 1.6; align-self: flex-end; text-align: right; }
-.ai-message { max-width: 90%; line-height: 1.6; align-self: flex-start; text-align: left; }
-.attachment-preview-in-chat { background-color: var(--action-button-bg); padding: 8px 12px; border-radius: 12px; margin-bottom: 8px; display: inline-flex; }
+.user-message { max-width: 90%; line-height: 1.6; align-self: flex-end; text-align: right; word-wrap: break-word; }
+.ai-message { max-width: 90%; line-height: 1.6; align-self: flex-start; text-align: left; word-wrap: break-word; }
+.attachment-preview-in-chat { background-color: var(--action-button-bg); padding: 8px 12px; border-radius: 12px; margin-bottom: 8px; display: inline-flex; max-width: 100%; }
 .ai-header { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; font-weight: 500; font-size: 16px; }
 .ai-header .logo-small { width: 30px; height: 30px; }
 .ai-response-content img { max-width: 100%; border-radius: 16px; margin-top: 12px; }
@@ -97,7 +97,7 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .menu-options button:hover { background-color: var(--hover-bg); }
 .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,.5); z-index: 99; opacity: 0; visibility: hidden; transition: opacity .3s ease-in-out,visibility .3s ease-in-out; }
 .overlay.active { opacity: 1; visibility: visible; }
-.attachment-popup { position: absolute; bottom: 100px; left: 24px; background-color: var(--action-button-bg); border-radius: 16px; padding: 10px; display: flex; gap: 10px; transform: translateY(10px) scale(.95); opacity: 0; visibility: hidden; transition: all .2s ease-in-out; }
+.attachment-popup { position: absolute; bottom: 90px; left: 24px; background-color: var(--action-button-bg); border-radius: 16px; padding: 10px; display: flex; gap: 10px; transform: translateY(10px) scale(.95); opacity: 0; visibility: hidden; transition: all .2s ease-in-out; }
 .attachment-popup.show { transform: translateY(0) scale(1); opacity: 1; visibility: visible; }
 .attachment-popup button { background: none; border: none; color: var(--text-color); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; border-radius: 12px; font-size: 12px; }
 .attachment-popup button:hover { background-color: var(--hover-bg); }
