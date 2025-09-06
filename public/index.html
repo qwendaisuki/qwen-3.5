@@ -14,9 +14,11 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- ... (Sidebar, Overlay, Header tetap sama) ... -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header"><div class="sidebar-brand"><img src="logo.png" alt="Logo" class="logo-small"><span>Qwen</span></div><button class="close-btn" id="close-btn">&times;</button></div>
+            <div class="sidebar-header">
+                <div class="sidebar-brand"><img src="logo.png" alt="Logo" class="logo-small"><span>Qwen</span></div>
+                <button class="close-btn" id="close-btn">&times;</button>
+            </div>
             <div class="history-container" id="history-container"></div>
         </aside>
         <div class="overlay" id="overlay"></div>
@@ -35,7 +37,6 @@
         </main>
 
         <footer class="chat-footer">
-            <!-- [BARU] Status indicator menggantikan tombol Stop lama -->
             <div class="status-indicator" id="status-indicator" style="display: none;"></div>
             <form id="chat-form">
                 <input type="file" id="file-input" style="display: none;" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">
