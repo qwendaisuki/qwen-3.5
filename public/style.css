@@ -1,60 +1,16 @@
 /* =================================
    1. Reset dan Pengaturan Dasar
    ================================= */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #000000;
-    color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    overflow: hidden;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #000000; color: #ffffff; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
 
 /* =================================
    2. Layout Utama (Header, Main, Footer)
    ================================= */
-.app-header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 10;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    width: 100%;
-}
-
-.main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    overflow-y: auto;
-    padding: 80px 0 20px 0; /* Update padding untuk konsistensi */
-    
-    /* PERBAIKAN: Default di tengah, akan diubah oleh JS */
-    justify-content: center;
-}
-
-/* PERBAIKAN: Kelas baru untuk mengubah alignment saat chat aktif */
-.main-content.chat-started {
-    justify-content: flex-start; /* Pindahkan konten ke atas */
-}
-
-.app-footer {
-    padding: 10px 20px 20px 20px;
-    width: 100%;
-    z-index: 10;
-}
+.app-header { position: absolute; top: 0; left: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; width: 100%; }
+.main-content { flex-grow: 1; display: flex; flex-direction: column; align-items: center; text-align: center; overflow-y: auto; padding: 80px 0 20px 0; justify-content: center; }
+.main-content.chat-started { justify-content: flex-start; }
+.app-footer { padding: 10px 20px 20px 20px; width: 100%; z-index: 10; }
 
 /* =================================
    3. Komponen Header & Navigasi
@@ -68,30 +24,9 @@ body {
 /* =================================
    4. Tampilan Awal (Logo & Judul)
    ================================= */
-/* PERBAIKAN: Memberi style centering langsung ke container */
-#initial-view {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-#initial-view.hidden {
-    display: none;
-}
-
-.animated-logo {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 20px;
-    background: linear-gradient(60deg, #a166ab, #5073b8, #1098ad, #f79533, #ef4e7b);
-    background-size: 300% 300%;
-    animation: gradient-animation 8s ease infinite;
-    -webkit-mask-image: url('qwen-logo.png'); mask-image: url('qwen-logo.png');
-    -webkit-mask-size: contain; mask-size: contain;
-    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-    -webkit-mask-position: center; mask-position: center;
-}
+#initial-view { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#initial-view.hidden { display: none; }
+.animated-logo { width: 100px; height: 100px; margin-bottom: 20px; background: linear-gradient(60deg, #a166ab, #5073b8, #1098ad, #f79533, #ef4e7b); background-size: 300% 300%; animation: gradient-animation 8s ease infinite; -webkit-mask-image: url('qwen-logo.png'); mask-image: url('qwen-logo.png'); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
 .title { font-size: 2.2rem; font-weight: 600; margin-bottom: 8px; }
 .subtitle { font-size: 1rem; font-weight: 400; color: #c0c0c0; }
 
@@ -106,65 +41,57 @@ body {
 .icon-button { background: transparent; border: none; color: #a0a0a0; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center; }
 .send-button { background: transparent !important; opacity: 0.7; transition: opacity 0.3s ease; }
 .send-button:hover { opacity: 1; }
+#file-input { display: none; } /* Sembunyikan input file default */
+label.icon-button { cursor: pointer; }
 
 /* =================================
    6. Gaya UI Chat
    ================================= */
-#chat-history {
-    width: 100%;
-    max-width: 800px;
-    padding: 0 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
+#chat-history { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 24px; }
+.message { max-width: 85%; line-height: 1.6; word-wrap: break-word; }
+/* Gaya untuk format Markdown */
+.message h1, .message h2, .message h3 { margin-top: 1em; margin-bottom: 0.5em; }
+.message p { margin-bottom: 1em; }
+.message ul, .message ol { padding-left: 20px; margin-bottom: 1em; }
+.message li { margin-bottom: 0.5em; }
+.message strong { font-weight: 600; }
+.message code { background-color: #282c34; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+.message pre { background-color: #1e1e1e; padding: 1em; border-radius: 8px; overflow-x: auto; }
+.message pre code { padding: 0; background: none; }
 
-.message { max-width: 85%; font-size: 1rem; line-height: 1.6; word-wrap: break-word; white-space: pre-wrap; }
 .user-message { align-self: flex-end; text-align: right; color: #e0e0e0; }
 .ai-message { align-self: flex-start; text-align: left; color: #ffffff; }
 
 /* =================================
-   7. Animasi "Thinking" & "Searching"
+   7. Animasi "Thinking" BARU
    ================================= */
-/* PERBAIKAN: Ukuran animasi dikecilkan */
-.thinking-animation {
+.bouncing-loader {
     align-self: flex-start;
     display: flex;
-    align-items: center;
     justify-content: center;
-    width: 45px; /* Dikecilkan dari 60px */
-    height: 22px; /* Dikecilkan dari 30px */
-    position: relative;
-    margin-left: -5px; /* Kompensasi visual agar terlihat pas di kiri */
+    align-items: flex-end;
+    width: 60px;
+    height: 35px;
 }
-.dot-container { position: absolute; width: 100%; height: 100%; animation: rotate 3s linear infinite; }
-.dot {
-    position: absolute;
-    width: 6px; /* Dikecilkan dari 8px */
-    height: 6px; /* Dikecilkan dari 8px */
+.bouncing-loader div {
+    width: 10px;
+    height: 10px;
+    margin: 3px;
     border-radius: 50%;
-    background: linear-gradient(60deg, #a166ab, #5073b8, #1098ad);
-    background-size: 300% 300%;
-    animation: gradient-animation 6s ease infinite alternate;
+    animation: bouncing-loader 0.6s infinite alternate;
 }
-.dot1 { top: 0; left: 50%; transform: translateX(-50%); }
-.dot2 { top: 50%; right: 0; transform: translateY(-50%); }
-.dot3 { bottom: 0; left: 50%; transform: translateX(-50%); }
-.dot4 { top: 50%; left: 0; transform: translateY(-50%); }
-
-.searching-animation {
-    align-self: flex-start;
-    display: flex;
-    align-items: center;
-    gap: 12px; /* Jarak disesuaikan */
-    padding: 5px 0;
+@keyframes bouncing-loader {
+    to { opacity: 0.1; transform: translateY(-16px); }
 }
-.searching-animation .thinking-animation { position: static; width: 30px; height: 30px; margin-left: 0; }
-.searching-text { font-size: 0.9rem; position: relative; -webkit-text-fill-color: transparent; background: linear-gradient(90deg, #666, #fff, #666); -webkit-background-clip: text; background-clip: text; background-size: 200% 100%; animation: shimmer 3s linear infinite; }
+.bouncing-loader div:nth-child(1) { background-color: #5073b8; }
+.bouncing-loader div:nth-child(2) { background-color: #a166ab; animation-delay: 0.2s; }
+.bouncing-loader div:nth-child(3) { background-color: #ef4e7b; animation-delay: 0.4s; }
 
 /* =================================
-   8. Keyframes (Tidak ada perubahan)
+   8. Keyframes Global
    ================================= */
-@keyframes gradient-animation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+@keyframes gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
