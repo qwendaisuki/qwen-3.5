@@ -11,11 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeScreen = document.getElementById('welcome-screen');
     const chatArea = document.getElementById('chat-area');
     const attachBtn = document.getElementById('attach-btn');
-    const fileInput = document.getElementById('file-input');
     const historyContainer = document.getElementById('history-container');
     const voiceBtn = document.getElementById('voice-btn');
     const sendBtn = document.getElementById('send-btn');
     const statusIndicator = document.getElementById('status-indicator');
+    const attachmentPopup = document.getElementById('attachment-popup');
+    const attachCameraBtn = document.getElementById('attach-camera-btn');
+    const attachGalleryBtn = document.getElementById('attach-gallery-btn');
+    const attachFilesBtn = document.getElementById('attach-files-btn');
+    const fileInputCamera = document.getElementById('file-input-camera');
+    const fileInputGallery = document.getElementById('file-input-gallery');
+    const fileInputFiles = document.getElementById('file-input-files');
+    const attachmentPreview = document.getElementById('attachment-preview');
+    const removeAttachmentBtn = document.getElementById('remove-attachment-btn');
 
     // === State Aplikasi ===
     let chatSessions = [];
@@ -24,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let abortController = new AbortController();
     let isRecognizing = false;
 
-    // === Inisialisasi Aplikasi ===
+    // === Inisialisasi ===
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
     if (SpeechRecognition) {
@@ -49,15 +57,23 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBtn.addEventListener('click', closeSidebar);
     overlay.addEventListener('click', closeSidebar);
     newChatBtn.addEventListener('click', startNewChat);
-    attachBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', handleFileAttachment);
     chatForm.addEventListener('submit', handleFormSubmit);
     voiceBtn.addEventListener('click', toggleVoiceRecognition);
     sendBtn.addEventListener('click', handleSendOrStop);
     chatInput.addEventListener('input', updateSendButtonState);
     document.body.addEventListener('click', handleDynamicClicks);
-
-    // === Fungsi Logika Utama ===
+    attachBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        attachmentPopup.classList.toggle('show');
+    });
+    document.body.addEventListener('click', () => attachmentPopup.classList.remove('show'));
+    attachCameraBtn.addEventListener('click', () => fileInputCamera.click());
+    attachGalleryBtn.addEventListener('click', () => fileInputGallery.click());
+    attachFilesBtn.addEventListener('click', () => fileInputFiles.click());
+    fileInputCamera.addEventListener('change', handleFileAttachment);
+    fileInputGallery.addEventListener('change', handleFileAttachment);
+    fileInputFiles.addEventListener('change', handleFileAttachment);
+    removeAttachmentBtn.addEventListener('click', removeAttachment);
 
     async function handleFormSubmit(e) {
         e.preventDefault();
@@ -68,11 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (welcomeScreen.style.display !== 'none') { welcomeScreen.style.display = 'none'; }
         if (currentChatId === null) { createNewChatSession(prompt || "Chat baru"); }
 
-        const userMessage = { role: "user", parts: [{ text: prompt }] };
+        const userMessage = { role: "user", parts: [{ text: prompt, file: attachedFile }] };
         addMessageToSession(currentChatId, userMessage);
         
-        displayUserMessage(prompt);
+        displayUserMessage(prompt, attachedFile);
         chatInput.value = '';
+        removeAttachment();
         updateSendButtonState();
         
         await fetchAiResponse();
@@ -110,6 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     prompt: lastUserMessage.parts[0].text,
                     history: historyForApi,
+                    fileData: lastUserMessage.parts[0].file ? lastUserMessage.parts[0].file.data : null,
+                    mimeType: lastUserMessage.parts[0].file ? lastUserMessage.parts[0].file.mimeType : null,
                 })
             });
 
@@ -172,8 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } finally {
             setLoadingState(false);
-            attachedFile = null;
-            fileInput.value = '';
         }
     }
     
@@ -192,8 +209,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const menu = menuDots.nextElementSibling;
             document.querySelectorAll('.menu-options').forEach(m => { if (m !== menu) m.style.display = 'none'; });
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        } else {
+        } else if (!e.target.closest('.attachment-popup')) {
              document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
+             attachmentPopup.classList.remove('show');
         }
         
         const deleteBtn = e.target.closest('.delete-btn');
@@ -226,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
             speakText(textToSpeak);
         }
     }
-
+    
     function renderSidebar() {
         historyContainer.innerHTML = '';
         if (chatSessions.length > 0) {
@@ -259,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (session && session.messages.length > 0) {
             welcomeScreen.style.display = 'none';
             session.messages.forEach(msg => {
-                if (msg.role === 'user') { displayUserMessage(msg.parts[0].text); } 
+                if (msg.role === 'user') { displayUserMessage(msg.parts[0].text, msg.parts[0].file); } 
                 else if (msg.role === 'model') { displayAiMessage(msg.parts[0].text); }
             });
             chatContainer.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
@@ -268,15 +286,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         scrollToBottom();
     }
-
-    function displayUserMessage(text) {
+    
+    function displayUserMessage(text, file = null) {
         const el = document.createElement('div');
         el.className = 'user-message';
-        el.textContent = text;
+        
+        let fileHtml = '';
+        if (file) {
+            fileHtml = `
+                <div class="attachment-preview-in-chat">
+                    <div class="file-info">
+                        ${getFileIcon(file.mimeType)}
+                        <span class="file-name">${file.name}</span>
+                    </div>
+                </div>`;
+        }
+        el.innerHTML = fileHtml + `<span>${text}</span>`;
         chatContainer.appendChild(el);
         scrollToBottom();
     }
     
+    // ... (sisa kode lengkap dari jawaban sebelumnya)
     function displayAiMessage(text, isStreaming = false) {
         const el = document.createElement('div');
         el.className = 'ai-message';
@@ -301,8 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateSendButtonState() {
         const hasText = chatInput.value.trim().length > 0;
-        voiceBtn.style.display = hasText ? 'none' : 'flex';
-        sendBtn.style.display = hasText ? 'flex' : 'none';
+        voiceBtn.style.display = hasText || attachedFile ? 'none' : 'flex';
+        sendBtn.style.display = hasText || attachedFile ? 'flex' : 'none';
+        
         if (!sendBtn.querySelector('svg')) {
              setLoadingState(false);
         }
@@ -334,40 +365,66 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateStatusIndicator(type, query = '') {
         let content = '';
         if (type === 'search') {
-            content = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="M12 18v4"/><path d="m19.07 19.07-2.83-2.83"/><path d="M22 12h-4"/><path d="m19.07 4.93-2.83 2.83"/></svg>
-                <span>Mencari: "${query}"</span>`;
+            content = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="M12 18v4"/><path d="m19.07 19.07-2.83-2.83"/><path d="M22 12h-4"/><path d="m19.07 4.93-2.83 2.83"/></svg><span>Mencari: "${query}"</span>`;
         } else if (type === 'typing') {
-            content = `
-                <span>Qwen sedang mengetik</span>
-                <div class="dots"><span></span><span></span><span></span></div>`;
+            content = `<span>Qwen sedang mengetik</span><div class="dots"><span></span><span></span><span></span></div>`;
         }
         statusIndicator.innerHTML = content;
     }
 
     function extractAndRenderSources(text) {
         const sourceMatch = text.match(/Sumber:([\s\S]*)/i);
-        if (!sourceMatch) {
-            return { cleanText: text, htmlWithSources: marked.parse(text) };
-        }
+        if (!sourceMatch) { return { cleanText: text, htmlWithSources: marked.parse(text) }; }
         const cleanText = text.replace(sourceMatch[0], '').trim();
         const sourcesHtml = sourceMatch[1].trim().split('\n').filter(line => line.trim()).map(line => {
             const linkMatch = line.match(/\d+\.\s*\[(.*?)\]\((.*?)\)/);
-            if (linkMatch) {
-                return `<li><a href="${linkMatch[2]}" target="_blank" rel="noopener noreferrer">${linkMatch[1]}</a></li>`;
-            }
-            return '';
+            return linkMatch ? `<li><a href="${linkMatch[2]}" target="_blank" rel="noopener noreferrer">${linkMatch[1]}</a></li>` : '';
         }).join('');
-        
-        const fullHtml = `${marked.parse(cleanText)}
-            <div class="sources-container">
-                <h4>Sumber:</h4>
-                <ul class="sources-list">${sourcesHtml}</ul>
-            </div>`;
-
+        const fullHtml = `${marked.parse(cleanText)}<div class="sources-container"><h4>Sumber:</h4><ul class="sources-list">${sourcesHtml}</ul></div>`;
         return { cleanText, htmlWithSources: fullHtml };
     }
 
+    function handleFileAttachment(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { alert("Ukuran file terlalu besar. Maksimal 5MB."); return; }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            attachedFile = {
+                data: event.target.result,
+                mimeType: file.type,
+                name: file.name
+            };
+            showAttachmentPreview(file.name, file.type);
+            updateSendButtonState();
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function showAttachmentPreview(name, type) {
+        document.getElementById('file-icon').innerHTML = getFileIcon(type);
+        document.getElementById('file-name').textContent = name;
+        attachmentPreview.style.display = 'flex';
+    }
+
+    function removeAttachment() {
+        attachedFile = null;
+        attachmentPreview.style.display = 'none';
+        fileInputCamera.value = '';
+        fileInputGallery.value = '';
+        fileInputFiles.value = '';
+        updateSendButtonState();
+    }
+
+    function getFileIcon(type) {
+        if (type.startsWith('image/')) return '🖼️';
+        if (type.startsWith('video/')) return '🎬';
+        if (type.startsWith('audio/')) return '🎵';
+        if (type === 'application/pdf') return '📄';
+        return '📎'; // Generic file
+    }
+
+    // ... (sisa fungsi helper)
     function startNewChat() { currentChatId = null; renderChat(null); renderSidebar(); closeSidebar(); }
     function createNewChatSession(prompt) {
         currentChatId = `chat_${Date.now()}`;
@@ -397,17 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadSessionsFromStorage() { chatSessions = JSON.parse(localStorage.getItem('chatSessions')) || []; }
     function saveSessionsToStorage() { localStorage.setItem('chatSessions', JSON.stringify(chatSessions)); }
     function getSessionById(id) { return chatSessions.find(s => s.id === id); }
-    function handleFileAttachment(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { alert("Ukuran file terlalu besar. Maksimal 5MB."); return; }
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            attachedFile = { data: event.target.result, mimeType: file.type };
-            chatInput.placeholder = `File "${file.name}" dilampirkan.`;
-        };
-        reader.readAsDataURL(file);
-    }
     function scrollToBottom() { chatArea.scrollTop = chatArea.scrollHeight; }
     function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
     function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
