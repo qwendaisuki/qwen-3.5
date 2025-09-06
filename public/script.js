@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const initialView = document.getElementById('initial-view');
     const mainContent = document.querySelector('.main-content');
 
-    // Daftar kata kunci yang sama dengan di backend untuk menentukan UI
     const SEARCH_TRIGGERS = [
         'siapa', 'kapan', 'dimana', 'apa itu', 'harga', 'berita', 'terkini', 
         'jelaskan tentang', 'berapa', 'statistik', 'definisi'
@@ -16,19 +15,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const userMessage = userInput.value.trim();
         if (userMessage === '') return;
 
-        if (!initialView.classList.contains('hidden')) {
+        // PERBAIKAN: Cek apakah chat sudah dimulai
+        const isFirstMessage = !initialView.classList.contains('hidden');
+        if (isFirstMessage) {
             initialView.classList.add('hidden');
+            // Tambahkan kelas ini untuk mengubah alignment di CSS
+            mainContent.classList.add('chat-started'); 
         }
 
         appendMessage(userMessage, 'user-message');
         userInput.value = '';
 
-        // Tentukan animasi mana yang akan ditampilkan
         const isSearch = SEARCH_TRIGGERS.some(k => userMessage.toLowerCase().includes(k));
         const thinkingElement = isSearch ? showSearchingAnimation() : showThinkingAnimation();
 
         try {
-            // URL tetap sama, backend yang akan menentukan logikanya
             const response = await fetch('/api/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -42,14 +43,13 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error:', error);
             thinkingElement.remove();
-            appendMessage('Maaf, terjadi kesalahan. Coba lagi nanti.', 'ai-message error');
+            appendMessage('Maaf, terjadi kesalahan. Coba lagi nanti.', 'ai-message');
         }
     });
 
     function appendMessage(text, className) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${className}`;
-        // Menggunakan innerHTML agar bisa merender format seperti newline (\n) jika ada
         messageDiv.innerText = text;
         chatHistory.appendChild(messageDiv);
         scrollToBottom();
@@ -64,11 +64,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return thinkingDiv;
     }
     
-    // --- FUNGSI BARU UNTUK ANIMASI SEARCHING ---
     function showSearchingAnimation() {
         const searchingDiv = document.createElement('div');
         searchingDiv.className = 'searching-animation';
-        // Gabungkan animasi titik dan teks "Searching..."
         searchingDiv.innerHTML = `
             <div class="thinking-animation">
                 <div class="dot-container">
