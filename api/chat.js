@@ -1,17 +1,23 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import axios from "axios";
 
-// Handler utama untuk serverless function
-export default async function handler(req, res) {
-    // 1. Periksa semua API Key di environment variables Vercel
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    const serperApiKey = process.env.SERPER_API_KEY; // KEY BARU!
-
-    if (!geminiApiKey) {
-        return res.status(500).json({ error: "GEMINI_API_KEY tidak dikonfigurasi." });
+// Fungsi baru untuk mengekstrak JSON secara aman dari teks
+function extractJson(text) {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    try {
+        return JSON.parse(jsonMatch[0]);
+    } catch (e) {
+        return null;
     }
-    if (!serperApiKey) {
-        return res.status(500).json({ error: "SERPER_API_KEY tidak dikonfigurasi." });
+}
+
+export default async function handler(req, res) {
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const serperApiKey = process.env.SERPER_API_KEY;
+
+    if (!geminiApiKey || !serperApiKey) {
+        return res.status(500).json({ error: "Satu atau lebih API key tidak dikonfigurasi." });
     }
     if (req.method !== 'POST') {
         return res.status(405).json({ error: "Metode tidak diizinkan." });
@@ -22,78 +28,77 @@ export default async function handler(req, res) {
 
     try {
         const { prompt, history } = req.body;
-        if (!prompt) {
-            return res.status(400).json({ error: "Prompt dibutuhkan." });
-        }
+        if (!prompt) return res.status(400).json({ error: "Prompt dibutuhkan." });
 
-        // --- TAHAP 1: ANALISIS KEBUTUHAN PENCARIAN ---
+        // --- TAHAP 1: KEPUTUSAN PENCARIAN YANG LEBIH CERDAS ---
+        // Prompt ini lebih tegas dan memberikan contoh (few-shot prompting)
         const decisionPrompt = `
-            Berdasarkan pesan terakhir pengguna dan riwayat percakapan, putuskan apakah pencarian web diperlukan untuk memberikan jawaban yang akurat dan terkini.
-            Riwayat: ${JSON.stringify(history)}
-            Pesan terakhir: "${prompt}"
+            Analisis pesan terakhir pengguna: "${prompt}".
+            Apakah pertanyaan ini secara eksplisit atau implisit memerlukan informasi terkini (setelah tahun 2023), berita, atau data real-time dari internet?
 
-            Jika pencarian diperlukan (misalnya untuk berita, data real-time, atau informasi spesifik pasca-2023), balas HANYA dengan JSON: {"searchQuery": "kata kunci pencarian yang relevan"}.
-            Jika tidak perlu pencarian (misalnya pertanyaan umum, kreatif, atau percakapan biasa), balas HANYA dengan JSON: {"searchQuery": null}.
+            Contoh:
+            - "hallo" -> {"searchQuery": null}
+            - "siapa presiden indonesia sekarang?" -> {"searchQuery": "presiden Indonesia sekarang 2025"}
+            - "buatkan aku puisi" -> {"searchQuery": null}
+            - "apa berita terbaru tentang teknologi AI?" -> {"searchQuery": "berita terbaru teknologi AI 2025"}
+
+            Balas HANYA dengan format JSON.
         `;
-
+        
         const decisionResult = await model.generateContent(decisionPrompt);
-        const decisionText = decisionResult.response.text().trim();
-        let decision;
-        try {
-            decision = JSON.parse(decisionText);
-        } catch {
-            decision = { searchQuery: null }; // Anggap tidak perlu search jika AI gagal format JSON
-        }
+        // Menggunakan fungsi aman untuk mengekstrak JSON, bukan parse langsung
+        const decision = extractJson(decisionResult.response.text());
         
         let searchResultsContext = "";
-        
-        // --- TAHAP 2: EKSEKUSI PENCARIAN (JIKA PERLU) ---
-        if (decision.searchQuery) {
-            console.log(`Melakukan pencarian untuk: "${decision.searchQuery}"`);
-            try {
-                const searchResponse = await axios.post('https://google.serper.dev/search', {
-                    q: decision.searchQuery
-                }, {
-                    headers: {
-                        'X-API-KEY': serperApiKey,
-                        'Content-Type': 'application/json'
-                    }
-                });
+        let isSearching = decision && decision.searchQuery;
 
-                const topResults = searchResponse.data.organic.slice(0, 5); // Ambil 5 hasil teratas
-                searchResultsContext = "Berikut adalah hasil pencarian web yang relevan: \n" + 
-                    topResults.map(r => `Judul: ${r.title}\nLink: ${r.link}\nKutipan: ${r.snippet}\n---`).join("\n\n");
+        // --- TAHAP 2: EKSEKUSI PENCARIAN (HANYA JIKA PERLU) ---
+        if (isSearching) {
+            console.log(`AI memutuskan untuk mencari: "${decision.searchQuery}"`);
+            try {
+                const searchResponse = await axios.post('https://google.serper.dev/search', 
+                    { q: decision.searchQuery },
+                    { headers: { 'X-API-KEY': serperApiKey, 'Content-Type': 'application/json' } }
+                );
+                
+                const topResults = searchResponse.data.organic?.slice(0, 5) || [];
+                if (topResults.length > 0) {
+                    searchResultsContext = "Berikut adalah hasil pencarian web relevan:\n" + 
+                        topResults.map((r, i) => `[Sumber ${i+1}] Judul: ${r.title}\nLink: ${r.link}\nKutipan: ${r.snippet}`).join("\n\n");
+                }
             } catch (searchError) {
                 console.error("Gagal melakukan pencarian:", searchError.message);
-                searchResultsContext = "Gagal mendapatkan hasil pencarian, jawab berdasarkan pengetahuan yang ada.";
+                searchResultsContext = "Info: Gagal mendapatkan hasil pencarian, jawab berdasarkan pengetahuan yang ada saja.";
             }
+        } else {
+            console.log(`AI memutuskan TIDAK perlu mencari.`);
         }
 
-        // --- TAHAP 3: GENERASI JAWABAN FINAL ---
-        const finalPromptParts = [
-            ...history,
-            { role: 'user', parts: [{ text: prompt }] }
-        ];
-
-        const augmentedPrompt = `
+        // --- TAHAP 3: GENERASI JAWABAN FINAL DENGAN KONTEKS & SUMBER ---
+        const finalSystemPrompt = `
             Anda adalah Qwen, AI Assistant yang sangat membantu.
-            Tugas Anda adalah memberikan jawaban yang rapi, terstruktur, dan akurat. Selalu gunakan format Markdown (seperti **tebal**, *miring*, list, dan judul) untuk membuat jawaban mudah dibaca.
-            
-            ${searchResultsContext ? `Gunakan informasi dari hasil pencarian web berikut untuk menyusun jawaban Anda:\n${searchResultsContext}\n\n` : ''}
-
-            Jawab pertanyaan terakhir dari pengguna berdasarkan riwayat percakapan dan konteks pencarian (jika ada).
+            Selalu berikan jawaban yang rapi dan terstruktur menggunakan format Markdown.
+            ${searchResultsContext 
+                ? `Gunakan informasi dari hasil pencarian web berikut untuk menyusun jawaban Anda. PENTING: Sertakan link sumber yang relevan di akhir jawaban Anda dalam format Markdown, contoh: [Nama Sumber](link). Contoh: "Menurut [Sumber 1], ..."\n\n${searchResultsContext}` 
+                : "Jawab pertanyaan pengguna berdasarkan pengetahuan Anda dan riwayat percakapan."
+            }
         `;
 
-        // Mengirim riwayat dan prompt gabungan ke model
-        const chat = model.startChat({ history });
-        const result = await chat.sendMessage(augmentedPrompt + "\n\n Pertanyaan Pengguna: " + prompt);
-        const finalResponse = await result.response;
-        const text = finalResponse.text();
+        const chat = model.startChat({ 
+            history: [
+                ...history,
+                { role: 'user', parts: [{ text: finalSystemPrompt }] },
+                { role: 'model', parts: [{ text: "Siap, saya mengerti instruksi saya." }] }
+            ]
+        });
+        
+        const result = await chat.sendMessage(prompt);
+        const text = result.response.text();
 
         res.status(200).json({ reply: text });
 
     } catch (error) {
-        console.error("Error saat menghasilkan konten:", error);
-        res.status(500).json({ error: 'Gagal menghasilkan konten.' });
+        console.error("Error saat menghasilkan konten:", error.message);
+        res.status(500).json({ error: 'Gagal menghasilkan konten di server.' });
     }
 }
