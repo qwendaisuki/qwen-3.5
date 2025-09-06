@@ -119,6 +119,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!lastUserMessage) return;
+        
+        // [PERBAIKAN UTAMA] Membersihkan histori dari properti 'file'
+        const cleanHistory = historyForApi.map(msg => ({
+            role: msg.role,
+            parts: [{ text: msg.parts[0].text }] // Hanya ambil teks, buang properti 'file'
+        }));
 
         abortController = new AbortController();
         setLoadingState(true);
@@ -130,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: lastUserMessage.parts[0].text,
-                    history: historyForApi,
+                    history: cleanHistory, // Kirim histori yang sudah bersih
                     fileData: lastUserMessage.parts[0].file ? lastUserMessage.parts[0].file.data : null,
                     mimeType: lastUserMessage.parts[0].file ? lastUserMessage.parts[0].file.mimeType : null,
                 })
@@ -201,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderChat(currentChatId);
             renderSidebar();
             closeSidebar();
+            return;
         }
         
         const menuDots = e.target.closest('.menu-dots');
@@ -210,12 +217,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const isVisible = menu.style.display === 'block';
             document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
             menu.style.display = isVisible ? 'none' : 'block';
+            return;
         }
         
         const deleteBtn = e.target.closest('.delete-btn');
-        if (deleteBtn) { deleteSession(deleteBtn.closest('.menu-options').dataset.id); }
+        if (deleteBtn) { deleteSession(deleteBtn.closest('.menu-options').dataset.id); return; }
         const exportBtn = e.target.closest('.export-btn');
-        if (exportBtn) { exportSession(exportBtn.closest('.menu-options').dataset.id); }
+        if (exportBtn) { exportSession(exportBtn.closest('.menu-options').dataset.id); return; }
         
         const copyBtn = e.target.closest('.copy-btn');
         if (copyBtn) {
@@ -225,21 +233,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 copyBtn.innerHTML = '<span>Disalin!</span>';
                 setTimeout(() => copyBtn.innerHTML = icon, 2000);
             });
+            return;
         }
         const likeBtn = e.target.closest('.like-btn');
-        if (likeBtn) { likeBtn.classList.toggle('liked'); }
+        if (likeBtn) { likeBtn.classList.toggle('liked'); return; }
         const shareBtn = e.target.closest('.share-btn');
         if (shareBtn) {
             const textToShare = shareBtn.closest('.ai-message').dataset.rawText;
             if(navigator.share) { navigator.share({ title: 'Respon dari Qwen', text: textToShare }); } 
             else { alert('Fitur bagikan tidak didukung.'); }
+            return;
         }
         const regenBtn = e.target.closest('.regen-btn');
-        if (regenBtn) { fetchAiResponse(true); }
+        if (regenBtn) { fetchAiResponse(true); return; }
         const speakBtn = e.target.closest('.speak-btn');
         if (speakBtn) {
             const textToSpeak = speakBtn.closest('.ai-message').dataset.rawText;
             speakText(textToSpeak);
+            return;
         }
     }
 
