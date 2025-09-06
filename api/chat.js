@@ -11,7 +11,7 @@ async function googleSearch(query) {
     const response = await fetch('https://google.serper.dev/search', {
         method: 'POST',
         headers: { 'X-API-KEY': serperApiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: query, gl: 'id', hl: 'id' }), // Search for Indonesian results
+        body: JSON.stringify({ q: query, gl: 'id', hl: 'id' }),
     });
     if (!response.ok) return `Error searching: ${response.statusText}`;
     const data = await response.json();
