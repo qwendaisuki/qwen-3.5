@@ -1,145 +1,246 @@
-// Menunggu hingga seluruh konten halaman (HTML) dimuat sebelum menjalankan skrip
 document.addEventListener('DOMContentLoaded', () => {
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const chatHistory = document.getElementById('chat-history');
+    const newChatButton = document.getElementById('new-chat-button');
+    let currentAiMessageElement = null; // Untuk menyimpan referensi ke elemen pesan AI yang sedang ditampilkan
 
-    // --- Referensi Elemen-elemen DOM ---
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    // ... (sisa referensi sama)
-    const historyContainer = document.getElementById('history-container');
-    
-    // ... (sisa referensi sama)
+    let messages = []; 
 
-    // --- FUNGSI UTAMA: MENGIRIM CHAT ---
-    chatForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const userMessage = chatInput.value.trim();
-        if (userMessage === '') return;
-
-        welcomeScreen.style.display = 'none';
-        displayUserMessage(userMessage);
-
-        const aiMessageContentElement = displayAiThinking();
-        scrollToBottom();
-        
-        chatInput.value = '';
-        chatInput.dispatchEvent(new Event('input'));
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMessage }),
-            });
-
-            // --- PERUBAHAN DI SINI: Penanganan error yang lebih baik ---
-            if (!response.ok) {
-                // Cek apakah server mengirim JSON error atau teks biasa
-                const contentType = response.headers.get("content-type");
-                let errorText;
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    const errorData = await response.json();
-                    errorText = errorData.error || `Server error: ${response.status}`;
-                } else {
-                    errorText = await response.text(); // Ambil pesan error sebagai teks biasa
-                }
-                throw new Error(errorText);
-            }
-
-            const data = await response.json();
-            await typeWriterEffect(data.reply, aiMessageContentElement);
-
-        } catch (error) {
-            console.error('Fetch error:', error);
-            // Sekarang pesan error akan lebih informatif
-            aiMessageContentElement.innerHTML = `<p style="color: #ff8a80;">Maaf, terjadi kesalahan: ${error.message}</p>`;
-        } finally {
-            scrollToBottom();
-        }
+    // NEW: Kustomisasi Marked.js renderer untuk menambahkan tombol copy pada blok kode
+    const renderer = new marked.Renderer();
+    renderer.code = (code, language) => {
+        // Jika tidak ada bahasa, gunakan 'plaintext'
+        const langClass = language ? `language-${language}` : '';
+        return `
+            <pre><code class="${langClass}">${code}</code><button class="copy-button"><i class="fas fa-copy"></i> Copy</button></pre>
+        `;
+    };
+    // Mengaplikasikan renderer kustom
+    marked.setOptions({
+        renderer: renderer,
+        highlight: function(code, lang) {
+            // Bisa menambahkan syntax highlighting library di sini, contoh: highlight.js
+            // Untuk saat ini, hanya mengembalikan kode apa adanya
+            return code;
+        },
+        langPrefix: 'language-',
+        gfm: true, // GitHub Flavored Markdown
+        breaks: true, // Line breaks from Markdown will be rendered as <br>
     });
-    
-    // --- (Sisa kode script.js tidak berubah) ---
 
-    // --- Fungsi Bantuan untuk UI Chat ---
-    function displayUserMessage(message) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'user-message';
-        messageDiv.textContent = message;
-        chatContainer.appendChild(messageDiv);
-    }
 
-    function displayAiThinking() {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'ai-message';
-        messageDiv.innerHTML = `
-            <div class="ai-header">
-                <img src="logo.png" alt="Logo" class="logo-small">
-                <span>Qwen</span>
-            </div>
-            <div class="ai-response-content">
-                <div class="status-indicator" style="display: flex; align-items: center; gap: 8px;">
-                    <div class="dots"><span></span><span></span><span></span></div>
-                </div>
-            </div>`;
-        chatContainer.appendChild(messageDiv);
-        return messageDiv.querySelector('.ai-response-content');
-    }
-
+    // Fungsi terpisah untuk memastikan chat history selalu scroll ke bawah
     function scrollToBottom() {
-        const chatArea = document.getElementById('chat-area');
-        chatArea.scrollTop = chatArea.scrollHeight;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
-    // --- FUNGSI BARU: EFEK ANIMASI KETIKAN ---
-    async function typeWriterEffect(text, element) {
-        element.innerHTML = '';
-        let rawText = '';
-        for (const char of text) {
-            rawText += char;
-            element.innerHTML = marked.parse(rawText);
-            scrollToBottom();
-            await new Promise(resolve => setTimeout(resolve, 15));
+    // Function to save messages to Local Storage
+    function saveMessagesToLocalStorage() {
+        localStorage.setItem('qwen35_chat_history', JSON.stringify(messages));
+    }
+
+    // Function to load messages from Local Storage
+    function loadMessagesFromLocalStorage() {
+        const savedMessages = localStorage.getItem('qwen35_chat_history');
+        if (savedMessages) {
+            messages = JSON.parse(savedMessages);
+            chatHistory.innerHTML = ''; 
+            for (const msg of messages) {
+                renderMessageToChatHistory(msg.sender, msg.content); 
+            }
+            scrollToBottom(); 
+            return true; 
         }
-        element.innerHTML = marked.parse(text);
-        element.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
+        return false; 
+    }
+
+    // Fungsi terpisah untuk merender pesan ke UI tanpa menyentuh array 'messages' atau localStorage
+    function renderMessageToChatHistory(sender, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message', sender);
+
+        const aiIcon = document.createElement('div');
+        aiIcon.classList.add('ai-icon');
+        aiIcon.textContent = 'Q';
+        messageDiv.appendChild(aiIcon);
+
+        const textContent = document.createElement('div');
+        textContent.classList.add('message-text');
+        messageDiv.appendChild(textContent);
+
+        chatHistory.appendChild(messageDiv);
+        scrollToBottom(); 
+
+        if (sender === 'ai') {
+            // NEW: Render markdown dengan custom renderer
+            textContent.innerHTML = marked.parse(content); 
+            // NEW: Tambahkan event listener untuk tombol copy setelah rendering
+            addCopyButtonListeners(textContent);
+        } else { // Pesan User
+            textContent.innerHTML = content; 
+        }
+    }
+
+    // NEW: Fungsi untuk menambahkan event listener ke tombol copy
+    function addCopyButtonListeners(element) {
+        const copyButtons = element.querySelectorAll('.copy-button');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const preElement = button.closest('pre');
+                const codeElement = preElement.querySelector('code');
+                const codeToCopy = codeElement.textContent;
+                
+                navigator.clipboard.writeText(codeToCopy).then(() => {
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.classList.remove('copied');
+                    }, 2000); // Reset setelah 2 detik
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            });
         });
     }
 
-    // --- Logika UI Lainnya (Tombol, Attachment, Sidebar) ---
-    // (Tidak ada perubahan di bagian ini)
-    const chatInput = document.getElementById('chat-input');
-    const voiceBtn = document.getElementById('voice-btn');
-    const sendBtn = document.getElementById('send-btn');
-    const attachBtn = document.getElementById('attach-btn');
-    const attachmentPopup = document.getElementById('attachment-popup');
-    const attachmentPreview = document.getElementById('attachment-preview');
-    const fileNameSpan = document.getElementById('file-name');
-    const removeAttachmentBtn = document.getElementById('remove-attachment-btn');
-    
-    const fileInputs = {
-        gallery: document.getElementById('file-input-gallery'),
-        camera: document.getElementById('file-input-camera'),
-        files: document.getElementById('file-input-files')
-    };
-    sendBtn.innerHTML = `
-        <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
-        <svg class="stop-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-        </svg>`;
-    sendBtn.style.display = 'none';
-    chatInput.addEventListener('input', () => { const hasText = chatInput.value.trim() !== ''; voiceBtn.style.display = hasText ? 'none' : 'flex'; sendBtn.style.display = hasText ? 'flex' : 'none'; });
-    attachBtn.addEventListener('click', (event) => { event.stopPropagation(); attachmentPopup.classList.toggle('show'); });
-    document.addEventListener('click', (event) => { if (!attachmentPopup.contains(event.target) && !attachBtn.contains(event.target)) { attachmentPopup.classList.remove('show'); } });
-    document.getElementById('attach-gallery-btn').addEventListener('click', () => fileInputs.gallery.click());
-    document.getElementById('attach-camera-btn').addEventListener('click', () => fileInputs.camera.click());
-    document.getElementById('attach-files-btn').addEventListener('click', () => fileInputs.files.click());
-    const handleFileChange = (event) => { const file = event.target.files[0]; if (file) { fileNameSpan.textContent = file.name; attachmentPreview.style.display = 'flex'; attachmentPopup.classList.remove('show'); } };
-    Object.values(fileInputs).forEach(input => input.addEventListener('change', handleFileChange));
-    removeAttachmentBtn.addEventListener('click', () => { Object.values(fileInputs).forEach(input => { input.value = ''; }); attachmentPreview.style.display = 'none'; fileNameSpan.textContent = ''; });
-    historyContainer.addEventListener('click', (event) => { const menuDots = event.target.closest('.menu-dots'); if (!menuDots) return; const menuOptions = menuDots.nextElementSibling; document.querySelectorAll('.menu-options').forEach(menu => { if (menu !== menuOptions) menu.style.display = 'none'; }); if (menuOptions) menuOptions.style.display = menuOptions.style.display === 'block' ? 'none' : 'block'; });
-    function addHistoryItem(title) { const historyList = historyContainer.querySelector('.history-list') || document.createElement('ul'); if (!historyContainer.querySelector('.history-list')) { historyList.className = 'history-list'; historyContainer.innerHTML = '<h3>Today</h3>'; historyContainer.appendChild(historyList); } const item = document.createElement('li'); item.className = 'history-item'; item.innerHTML = `<span>${title}</span> <svg class="menu-dots" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg> <div class="menu-options"><button class="export-btn">Export</button><button class="delete-btn">Delete</button></div>`; historyList.appendChild(item); item.querySelector('.delete-btn').addEventListener('click', () => { item.remove(); }); item.querySelector('.export-btn').addEventListener('click', () => { alert(`Exporting: ${title}`); }); }
-    addHistoryItem("Percakapan Baru");
+
+    // Function to add a message to the chat history (now also saves to 'messages' array)
+    async function addMessageToChat(sender, message = '') {
+        // Render pesan ke UI
+        renderMessageToChatHistory(sender, message);
+        
+        // Simpan pesan ke array 'messages'
+        messages.push({ sender, content: message });
+        saveMessagesToLocalStorage(); // Simpan ke localStorage
+
+        // Set currentAiMessageElement hanya jika itu pesan AI baru
+        if (sender === 'ai') {
+            const lastMessageDiv = chatHistory.lastChild;
+            if (lastMessageDiv) {
+                 currentAiMessageElement = lastMessageDiv.querySelector('.message-text');
+            }
+        }
+    }
+
+    // Function to clear chat history and start a new chat
+    function startNewChat() {
+        chatHistory.innerHTML = ''; 
+        userInput.value = ''; 
+        userInput.style.height = 'auto'; 
+        currentAiMessageElement = null; 
+        messages = []; 
+        localStorage.removeItem('qwen35_chat_history'); 
+
+        addMessageToChat('ai', 'Hello there! I am Qwen 3.5, your personal AI assistant. How can I help you today?'); 
+    }
+
+    // Event listener for send button click
+    sendButton.addEventListener('click', async () => {
+        const message = userInput.value.trim();
+        if (message) {
+            await addMessageToChat('user', message); 
+            userInput.value = ''; 
+            userInput.style.height = 'auto'; 
+
+            await addMessageToChat('ai', 'Thinking...'); 
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: message }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorData.error || response.statusText}`);
+                }
+                
+                const data = await response.json(); 
+                
+                // Ganti 'Thinking...' dengan respons AI yang sebenarnya
+                if (currentAiMessageElement) {
+                    currentAiMessageElement.innerHTML = marked.parse(data.response); // Render markdown untuk respons AI
+                    // Setelah merender, tambahkan listener copy
+                    addCopyButtonListeners(currentAiMessageElement);
+
+                    const lastAiMessageIndex = messages.findIndex(msg => msg.sender === 'ai' && msg.content === 'Thinking...');
+                    if (lastAiMessageIndex !== -1) {
+                        messages[lastAiMessageIndex].content = data.response;
+                        saveMessagesToLocalStorage();
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error fetching AI response:', error);
+                const errorMessage = `Oops! Something went wrong. Please try again.<br><small><em>Details: ${error.message}</em></small>`;
+                if (currentAiMessageElement) {
+                    currentAiMessageElement.innerHTML = errorMessage;
+                    const lastAiMessageIndex = messages.findIndex(msg => msg.sender === 'ai' && msg.content === 'Thinking...');
+                    if (lastAiMessageIndex !== -1) {
+                        messages[lastAiMessageIndex].content = errorMessage;
+                        saveMessagesToLocalStorage();
+                    }
+                } else {
+                    await addMessageToChat('ai', errorMessage); 
+                }
+            } finally {
+                currentAiMessageElement = null; 
+            }
+            scrollToBottom(); 
+        }
+    });
+
+    // Event listener for Enter key in textarea
+    userInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendButton.click();
+        }
+    });
+
+    // Adjust textarea height dynamically
+    userInput.addEventListener('input', () => {
+        userInput.style.height = 'auto';
+        userInput.style.height = userInput.scrollHeight + 'px';
+    });
+
+    // Load messages from Local Storage on initial load
+    const hasSavedMessages = loadMessagesFromLocalStorage();
+    if (!hasSavedMessages) {
+        startNewChat(); 
+    } else {
+        currentAiMessageElement = null; 
+    }
+
+    // Event listener untuk tombol New Chat
+    newChatButton.addEventListener('click', startNewChat);
+
+    // Make suggested prompts and action buttons clickable
+    document.querySelectorAll('.action-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const text = button.textContent.trim(); 
+            userInput.value = text;
+            userInput.focus();
+            userInput.style.height = 'auto'; 
+            userInput.style.height = userInput.scrollHeight + 'px'; 
+            scrollToBottom(); 
+        });
+    });
+
+    document.querySelectorAll('.suggested-prompt').forEach(promptDiv => {
+        promptDiv.addEventListener('click', () => {
+            const text = promptDiv.querySelector('p').textContent.trim(); 
+            userInput.value = text;
+            userInput.focus();
+            userInput.style.height = 'auto'; 
+            userInput.style.height = userInput.scrollHeight + 'px'; 
+            scrollToBottom(); 
+        });
+    });
 });
