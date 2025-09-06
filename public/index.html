@@ -11,33 +11,31 @@
     <!-- Header / Bagian Atas -->
     <header class="app-header">
         <div class="header-icon">
-            <!-- Ikon Menu (Hamburger) -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </div>
         
         <nav class="main-nav">
             <div class="nav-icon">
-                <!-- Ikon Home -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </div>
-            <div class="nav-avatar">
-                <img src="avatar.png" alt="User Avatar">
-            </div>
+            <!-- Avatar diganti dengan inisial -->
+            <div class="nav-initial">Q</div>
             <div class="nav-icon">
-                <!-- Ikon Tambah -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </div>
         </nav>
 
         <div class="header-icon">
-            <!-- Ikon Profil -->
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         </div>
     </header>
 
     <!-- Konten Utama -->
     <main class="main-content">
-        <img src="qwen-logo.png" alt="Qwen 3.5 Logo" class="logo">
+        <!-- Logo dibungkus untuk animasi -->
+        <div class="logo-container">
+            <img src="qwen-logo.png" alt="Qwen 3.5 Logo" class="logo">
+        </div>
         <h1 class="title">Qwen 3.5</h1>
         <p class="subtitle">AI Assistant Karya Anak Bangsa</p>
     </main>
@@ -47,16 +45,13 @@
         <form class="input-form">
             <div class="input-container">
                 <button type="button" class="icon-button">
-                    <!-- Ikon Tambah dalam Input -->
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 </button>
                 <input type="text" placeholder="Tulis pertanyaan...">
                 <button type="button" class="icon-button">
-                    <!-- Ikon Suara -->
                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
                 </button>
                 <button type="submit" class="icon-button send-button">
-                    <!-- Ikon Kirim -->
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </div>
