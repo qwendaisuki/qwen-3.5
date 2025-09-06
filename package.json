@@ -1,7 +1,7 @@
 {
   "name": "qwen-clone-project",
   "version": "1.0.0",
-  "description": "AI Assistant with Memory, Search, and Markdown capabilities.",
+  "description": "AI Assistant with Memory and Search capabilities.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,10 +12,9 @@
     "gemini",
     "serper"
   ],
-  "author": "Qwen",
+  "author": "qwen",
   "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.12.0",
-    "axios": "^1.7.2"
+    "@google/generative-ai": "^0.12.0"
   }
 }
