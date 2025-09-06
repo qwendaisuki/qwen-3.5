@@ -19,7 +19,6 @@
         </header>
 
         <main class="main-content">
-            <!-- Tampilan awal, akan disembunyikan setelah chat dimulai -->
             <div id="initial-view">
                 <div class="logo-container">
                     <img src="/qwen-logo.png" alt="Qwen Logo" class="logo-img">
@@ -27,13 +26,10 @@
                 <h1>AI Assistant Karya Anak Bangsa</h1>
                 <p class="version">version 1.0</p>
             </div>
-            
-            <!-- Wadah untuk semua pesan chat -->
             <div id="chat-container"></div>
         </main>
 
         <footer class="chat-footer">
-            <!-- Copyright dipindahkan ke sini -->
             <p class="copyright">2025 By Qwen Inc.</p>
             <div class="chat-input-container">
                 <form class="chat-form" id="chat-form">
@@ -47,6 +43,8 @@
 
     <!-- Script Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- BARU: Script untuk render Markdown -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
     <!-- Script Kustom -->
     <script src="script.js"></script>
 </body>
