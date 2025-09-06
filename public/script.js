@@ -61,18 +61,22 @@ document.addEventListener('DOMContentLoaded', () => {
     voiceBtn.addEventListener('click', toggleVoiceRecognition);
     sendBtn.addEventListener('click', handleSendOrStop);
     chatInput.addEventListener('input', updateSendButtonState);
-    
     attachBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         attachmentPopup.classList.toggle('show');
     });
 
     document.body.addEventListener('click', (e) => {
-        handleDynamicClicks(e);
         if (!e.target.closest('.add-btn')) {
             attachmentPopup.classList.remove('show');
         }
+        if (!e.target.closest('.menu-dots')) {
+            document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
+        }
     });
+
+    historyContainer.addEventListener('click', handleHistoryClicks);
+    chatContainer.addEventListener('click', handleActionButtons);
 
     attachCameraBtn.addEventListener('click', () => fileInputCamera.click());
     attachGalleryBtn.addEventListener('click', () => fileInputGallery.click());
@@ -114,16 +118,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const aiMessages = chatContainer.querySelectorAll('.ai-message');
             if (aiMessages.length > 0) aiMessages[aiMessages.length - 1].remove();
         } else {
-            lastUserMessage = currentSession.messages[currentSession.messages.length - 1];
+            lastUserMessage = currentSession.messages.findLast(m => m.role === 'user');
             historyForApi = currentSession.messages.slice(0, -1);
         }
 
         if (!lastUserMessage) return;
         
-        // [PERBAIKAN UTAMA] Membersihkan histori dari properti 'file'
         const cleanHistory = historyForApi.map(msg => ({
             role: msg.role,
-            parts: [{ text: msg.parts[0].text }] // Hanya ambil teks, buang properti 'file'
+            parts: [{ text: msg.parts[0].text }]
         }));
 
         abortController = new AbortController();
@@ -136,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: lastUserMessage.parts[0].text,
-                    history: cleanHistory, // Kirim histori yang sudah bersih
+                    history: cleanHistory,
                     fileData: lastUserMessage.parts[0].file ? lastUserMessage.parts[0].file.data : null,
                     mimeType: lastUserMessage.parts[0].file ? lastUserMessage.parts[0].file.mimeType : null,
                 })
@@ -200,14 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function handleDynamicClicks(e) {
-        const historyItem = e.target.closest('.history-item');
-        if (historyItem && !e.target.closest('.menu-dots')) {
-            currentChatId = historyItem.dataset.id;
+    function handleHistoryClicks(e) {
+        const historyItemSpan = e.target.closest('.history-item span');
+        if (historyItemSpan) {
+            currentChatId = historyItemSpan.parentElement.dataset.id;
             renderChat(currentChatId);
             renderSidebar();
             closeSidebar();
-            return;
         }
         
         const menuDots = e.target.closest('.menu-dots');
@@ -217,14 +219,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const isVisible = menu.style.display === 'block';
             document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
             menu.style.display = isVisible ? 'none' : 'block';
-            return;
         }
         
         const deleteBtn = e.target.closest('.delete-btn');
-        if (deleteBtn) { deleteSession(deleteBtn.closest('.menu-options').dataset.id); return; }
+        if (deleteBtn) { deleteSession(deleteBtn.closest('.menu-options').dataset.id); }
         const exportBtn = e.target.closest('.export-btn');
-        if (exportBtn) { exportSession(exportBtn.closest('.menu-options').dataset.id); return; }
-        
+        if (exportBtn) { exportSession(exportBtn.closest('.menu-options').dataset.id); }
+    }
+    
+    function handleActionButtons(e) {
         const copyBtn = e.target.closest('.copy-btn');
         if (copyBtn) {
             const textToCopy = copyBtn.closest('.ai-message').dataset.rawText;
@@ -233,24 +236,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 copyBtn.innerHTML = '<span>Disalin!</span>';
                 setTimeout(() => copyBtn.innerHTML = icon, 2000);
             });
-            return;
         }
         const likeBtn = e.target.closest('.like-btn');
-        if (likeBtn) { likeBtn.classList.toggle('liked'); return; }
+        if (likeBtn) { likeBtn.classList.toggle('liked'); }
         const shareBtn = e.target.closest('.share-btn');
         if (shareBtn) {
             const textToShare = shareBtn.closest('.ai-message').dataset.rawText;
             if(navigator.share) { navigator.share({ title: 'Respon dari Qwen', text: textToShare }); } 
             else { alert('Fitur bagikan tidak didukung.'); }
-            return;
         }
         const regenBtn = e.target.closest('.regen-btn');
-        if (regenBtn) { fetchAiResponse(true); return; }
+        if (regenBtn) { fetchAiResponse(true); }
         const speakBtn = e.target.closest('.speak-btn');
         if (speakBtn) {
             const textToSpeak = speakBtn.closest('.ai-message').dataset.rawText;
             speakText(textToSpeak);
-            return;
         }
     }
 
@@ -399,11 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (file.size > 5 * 1024 * 1024) { alert("Ukuran file terlalu besar. Maksimal 5MB."); return; }
         const reader = new FileReader();
         reader.onload = (event) => {
-            attachedFile = {
-                data: event.target.result,
-                mimeType: file.type,
-                name: file.name
-            };
+            attachedFile = { data: event.target.result, mimeType: file.type, name: file.name };
             showAttachmentPreview(file.name, file.type);
             updateSendButtonState();
         };
@@ -430,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type.startsWith('video/')) return '🎬';
         if (type.startsWith('audio/')) return '🎵';
         if (type === 'application/pdf') return '📄';
-        return '📎'; // Generic file
+        return '📎';
     }
 
     function startNewChat() { currentChatId = null; renderChat(null); renderSidebar(); closeSidebar(); }
