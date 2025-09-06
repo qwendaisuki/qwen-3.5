@@ -11,13 +11,16 @@ body {
     color: #ffffff;
     display: flex;
     flex-direction: column;
-    /* Gunakan 100dvh untuk menyesuaikan tinggi layar perangkat mobile dengan benar */
     height: 100dvh;
     overflow: hidden;
 }
 
 /* Header */
 .app-header {
+    position: absolute; /* Header melayang di atas konten */
+    top: 0;
+    left: 0;
+    z-index: 10;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -30,14 +33,19 @@ body {
     color: #a0a0a0;
 }
 
-/* Navigasi Utama di Tengah */
+/* --- PERUBAHAN: Glassmorphism di Navigasi --- */
 .main-nav {
     display: flex;
     align-items: center;
-    background-color: #252525;
     border-radius: 50px;
     padding: 5px;
     gap: 10px;
+
+    /* Efek Glassmorphism */
+    background: rgba(45, 45, 45, 0.7);
+    -webkit-backdrop-filter: blur(12px); /* Untuk Safari/iOS */
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-icon {
@@ -50,11 +58,10 @@ body {
     cursor: pointer;
 }
 
-/* --- STYLE BARU: Ikon Inisial --- */
 .nav-initial {
     width: 44px;
     height: 44px;
-    background-color: #3b82f6; /* Warna biru */
+    background-color: #3b82f6;
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -65,7 +72,6 @@ body {
     cursor: pointer;
 }
 
-
 /* Konten Utama */
 .main-content {
     flex-grow: 1;
@@ -74,34 +80,29 @@ body {
     justify-content: center;
     align-items: center;
     text-align: center;
-    overflow: auto; /* Memastikan konten bisa di-scroll jika layar terlalu kecil */
+    overflow: auto;
 }
 
-/* --- STYLE BARU: Container & Animasi Logo --- */
-.logo-container {
-    position: relative;
+/* --- PERUBAHAN: Animasi Langsung pada Logo --- */
+.animated-logo {
     width: 100px;
     height: 100px;
     margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.logo-container::before {
-    content: '';
-    position: absolute;
-    inset: -3px; /* Ketebalan outline animasi */
-    border-radius: 50%; /* Membuat outline berbentuk lingkaran */
+    
+    /* Gradien Animasi sebagai background */
     background: linear-gradient(60deg, #a166ab, #5073b8, #1098ad, #f79533, #ef4e7b);
     background-size: 300% 300%;
-    animation: gradient-animation 8s linear infinite;
-    z-index: -1;
-}
+    animation: gradient-animation 8s ease infinite;
 
-.logo {
-    width: 100%;
-    height: auto;
+    /* Menggunakan gambar PNG transparan sebagai mask */
+    -webkit-mask-image: url('qwen-logo.png');
+    mask-image: url('qwen-logo.png');
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 .title {
@@ -126,30 +127,23 @@ body {
     width: 100%;
 }
 
-/* --- STYLE BARU: Container & Animasi Input --- */
-.input-container {
-    display: flex;
-    align-items: center;
+/* --- PERUBAHAN: Wrapper untuk Border Animasi yang Jelas --- */
+.input-wrapper {
     border-radius: 50px;
-    padding: 8px 15px;
-    width: 100%;
-    position: relative;
-    background-color: #000; /* Warna background agar menutupi gradien di belakang */
-    overflow: hidden; /* Penting agar gradien tidak keluar dari border-radius */
-    border: none; /* Hapus border lama */
-}
-
-.input-container::before {
-    content: '';
-    position: absolute;
-    top: -2px; left: -2px; right: -2px; bottom: -2px;
-    border-radius: 52px; /* Sedikit lebih besar dari border-radius container */
+    padding: 2px; /* Ketebalan border */
     background: linear-gradient(90deg, #5073b8, #a166ab, #ef4e7b, #f79533, #5073b8);
     background-size: 400% 100%;
     animation: gradient-animation 6s linear infinite;
-    z-index: -1;
 }
 
+.input-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: #000;
+    border-radius: 50px; /* Radius sedikit lebih kecil dari wrapper */
+    padding: 6px 15px; /* Sedikit mengurangi padding vertikal */
+}
 
 .input-container input[type="text"] {
     flex-grow: 1;
@@ -161,38 +155,13 @@ body {
     margin: 0 10px;
 }
 
-.input-container input::placeholder {
-    color: #888;
-}
+.input-container input::placeholder { color: #888; }
+.icon-button { background: transparent; border: none; color: #a0a0a0; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center; }
+.send-button { background-color: #4A4A4A; border-radius: 50%; width: 32px; height: 32px; color: #fff; }
 
-.icon-button {
-    background: transparent;
-    border: none;
-    color: #a0a0a0;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.send-button {
-    background-color: #4A4A4A;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    color: #fff;
-}
-
-/* --- Keyframes untuk Animasi Gradien --- */
+/* --- Keyframes untuk Animasi Gradien (Dapat digunakan oleh logo dan border) --- */
 @keyframes gradient-animation {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
