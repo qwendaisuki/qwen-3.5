@@ -9,13 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.querySelector(".main-content");
 
     let chatHistory = [];
+    let isTyping = false; // Flag untuk mencegah submit saat AI sedang mengetik
 
     chatForm.addEventListener('submit', handleFormSubmit);
 
     async function handleFormSubmit(event) {
         event.preventDefault();
-        const userInput = chatInput.value.trim();
-        if (!userInput) return;
+        const userInput = chat-input.value.trim();
+        if (!userInput || isTyping) return; // Jangan kirim jika kosong atau AI sedang mengetik
 
         if (initialView && initialView.style.display !== 'none') {
             initialView.style.display = 'none';
@@ -24,8 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
         displayUserMessage(userInput);
         chatInput.value = '';
 
-        // Tampilkan indikator loading. Teksnya akan kita tentukan berdasarkan input.
-        // Heuristik sederhana: jika ada kata kunci seperti "berita", "siapa", "apa itu", "terkini", anggap itu pencarian.
         const searchKeywords = ['berita', 'siapa', 'apa itu', 'kapan', 'dimana', 'terkini', 'harga', 'cuaca'];
         const isLikelySearch = searchKeywords.some(keyword => userInput.toLowerCase().includes(keyword));
         showLoadingIndicator(isLikelySearch);
@@ -45,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             removeLoadingIndicator();
-            displayAiMessage(data.reply);
+            await displayAiMessage(data.reply); // Ubah jadi 'await'
 
         } catch (error) {
             console.error('Error:', error);
             removeLoadingIndicator();
-            displayAiMessage(`**Maaf, terjadi kesalahan:**\n\n\`\`\`\n${error.message}\n\`\`\`\n\nCoba lagi nanti.`);
+            await displayAiMessage(`**Maaf, terjadi kesalahan:**\n\n\`\`\`\n${error.message}\n\`\`\`\n\nCoba lagi nanti.`);
         }
     }
 
@@ -63,56 +62,75 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
 
+    // =======================================================
+    // FUNGSI BARU DENGAN EFEK MENGETIK
+    // =======================================================
     function displayAiMessage(message) {
-        chatHistory.push({ role: 'model', parts: [{ text: message }] });
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('chat-message', 'ai-message');
-        const htmlContent = converter.makeHtml(message);
-        
-        messageElement.innerHTML = `
-            <div class="ai-header">
-                <img src="/qwen-logo.png" alt="Qwen Logo">
-                <span>Qwen</span>
-            </div>
-            <div class="message-content">
-                ${htmlContent}
-            </div>
-        `;
-        chatContainer.appendChild(messageElement);
-        scrollToBottom();
+        return new Promise(resolve => {
+            isTyping = true;
+            chatHistory.push({ role: 'model', parts: [{ text: message }] });
+            
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', 'ai-message');
+            messageElement.innerHTML = `
+                <div class="ai-header">
+                    <img src="/qwen-logo.png" alt="Qwen Logo">
+                    <span>Qwen</span>
+                </div>
+                <div class="message-content"></div>
+            `;
+            const contentDiv = messageElement.querySelector('.message-content');
+            chatContainer.appendChild(messageElement);
+            scrollToBottom();
+            
+            let i = 0;
+            const typingSpeed = 20; // Kecepatan mengetik dalam milidetik (makin kecil makin cepat)
+            let currentText = "";
+
+            function type() {
+                if (i < message.length) {
+                    currentText += message[i];
+                    // Konversi Markdown menjadi HTML di setiap karakter
+                    contentDiv.innerHTML = converter.makeHtml(currentText) + '<span class="typing-cursor"></span>';
+                    i++;
+                    scrollToBottom(); // Terus scroll saat mengetik
+                    setTimeout(type, typingSpeed);
+                } else {
+                    // Hapus kursor setelah selesai
+                    contentDiv.innerHTML = converter.makeHtml(message);
+                    isTyping = false; // Selesai mengetik
+                    resolve(); // Tandai Promise selesai
+                }
+            }
+            type();
+        });
     }
-    
-    // Fungsi indikator yang disatukan
+    // =======================================================
+
     function showLoadingIndicator(isSearching) {
+        // ... (Fungsi ini tidak berubah)
         const indicatorText = isSearching ? "mencari..." : "thinking...";
-        
         const indicator = document.createElement('div');
         indicator.id = 'loading-indicator';
         indicator.classList.add('chat-message', 'ai-message');
-        
         const dotCount = 3;
         let dotsHtml = '';
         for (let i = 1; i <= dotCount; i++) {
             dotsHtml += `<div class="dot dot-${i}"></div>`;
         }
-        
-        indicator.innerHTML = `
-            <div class="thinking-indicator">
-                <div class="bouncing-dots">${dotsHtml}</div>
-                <div class="thinking-text">${indicatorText}</div>
-            </div>
-        `;
-        
+        indicator.innerHTML = `<div class="thinking-indicator"><div class="bouncing-dots">${dotsHtml}</div><div class="thinking-text">${indicatorText}</div></div>`;
         chatContainer.appendChild(indicator);
         scrollToBottom();
     }
     
     function removeLoadingIndicator() {
+        // ... (Fungsi ini tidak berubah)
         const indicator = document.getElementById('loading-indicator');
         if (indicator) indicator.remove();
     }
 
     function scrollToBottom() {
+        // ... (Fungsi ini tidak berubah)
         mainContent.scrollTop = mainContent.scrollHeight;
     }
 

@@ -1,4 +1,6 @@
-/* Reset dan Pengaturan Dasar */
+/* =================================== */
+/* 1. PENGATURAN DASAR & FONT          */
+/* =================================== */
 :root {
     --bg-color: #000000;
     --text-color: #E0E0E0;
@@ -29,16 +31,16 @@ body {
     overflow: hidden;
 }
 
-/* ======================================= */
-/* PERBAIKAN UTAMA: Layout dengan Flexbox  */
-/* ======================================= */
+/* =================================== */
+/* 2. STRUKTUR LAYOUT UTAMA            */
+/* =================================== */
 .app-container {
     width: 100%;
     max-width: 768px;
     height: 100vh;
     height: -webkit-fill-available;
-    display: flex; /* Menggunakan Flexbox */
-    flex-direction: column; /* Mengatur tata letak dari atas ke bawah */
+    display: flex;
+    flex-direction: column;
     position: relative;
     background-color: var(--bg-color);
 }
@@ -48,20 +50,35 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    flex-shrink: 0; /* Mencegah header menyusut */
+    flex-shrink: 0;
     width: 100%;
     z-index: 10;
 }
 
 .main-content {
-    flex-grow: 1; /* Membuat area ini mengisi sisa ruang */
-    overflow-y: auto; /* Membuat HANYA area ini yang bisa di-scroll */
+    flex-grow: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    padding: 0 1rem; /* Padding samping untuk chat */
+    padding: 0 1rem;
+    scroll-behavior: smooth; /* <-- EFEK SCROLLING MULUS */
 }
-/* ======================================= */
 
+.chat-footer {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+/* =================================== */
+/* 3. KOMPONEN HEADER & TAMPILAN AWAL  */
+/* =================================== */
 .version-selector {
     display: flex;
     align-items: center;
@@ -80,8 +97,6 @@ body {
     width: 24px;
     height: 24px;
 }
-
-/* Mengembalikan lingkaran pada tombol plus di header */
 .app-header button:last-child i {
     border: 2px solid var(--text-secondary);
     border-radius: 50%;
@@ -94,7 +109,7 @@ body {
     justify-content: center;
     align-items: center;
     text-align: center;
-    flex-grow: 1; /* Memastikan ini tetap di tengah saat belum ada chat */
+    flex-grow: 1;
     padding-bottom: 120px;
 }
 
@@ -114,26 +129,15 @@ body {
     font-size: 1.5rem;
     font-weight: 500;
 }
-
 #initial-view .version {
     margin-top: 0.5rem;
     color: var(--text-secondary);
     font-size: 1rem;
 }
 
-/* Footer dan Input Chat (tetap menggunakan position absolute) */
-.chat-footer {
-    position: absolute;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 600px;
-    text-align: center;
-    flex-shrink: 0; /* Mencegah footer menyusut */
-    z-index: 10;
-}
-
+/* =================================== */
+/* 4. INPUT CHAT & FOOTER              */
+/* =================================== */
 .chat-input-container {
     padding: 3px;
     border-radius: 30px;
@@ -157,7 +161,7 @@ body {
     align-items: center;
     background: transparent;
     border-radius: 27px;
-    padding: 0.5rem 0.5rem;
+    padding: 0.5rem;
 }
 
 input#chat-input {
@@ -198,20 +202,20 @@ input#chat-input::placeholder {
     opacity: 0.6;
 }
 
-/* ============================ */
-/* STYLE CHAT YANG DIPERBARUI   */
-/* ============================ */
+/* =================================== */
+/* 5. TAMPILAN PESAN CHAT              */
+/* =================================== */
 #chat-container {
     width: 100%;
-    padding-top: 1rem; /* Memberi jarak dari header */
-    padding-bottom: 150px; /* Memberi ruang agar tidak tertutup input */
+    padding-top: 1rem;
+    padding-bottom: 150px;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Jarak antar pesan */
+    gap: 1.5rem;
 }
 
 .chat-message {
-    padding: 0; /* Dihapus dari sini */
+    padding: 0;
     border-radius: 1.2rem;
     max-width: 85%;
     word-wrap: break-word;
@@ -221,9 +225,8 @@ input#chat-input::placeholder {
 .user-message {
     align-self: flex-end;
     color: var(--text-color);
-    /* Latar belakang transparan, tidak perlu properti background */
     text-align: right;
-    padding: 0.2rem 0.5rem; /* Padding kecil agar rapi */
+    padding: 0.2rem 0.5rem;
 }
 
 .ai-message {
@@ -246,16 +249,29 @@ input#chat-input::placeholder {
     font-weight: bold;
     color: var(--text-color);
 }
-
 .ai-message .message-content {
-    /* Latar belakang transparan, tidak perlu properti background */
     max-width: 100%;
-    color: #b0b0b0; /* Warna teks AI sedikit lebih redup */
+    color: #b0b0b0;
     padding: 0.2rem 0.5rem;
 }
 
+.message-content a {
+    color: #8ab4f8;
+    text-decoration: none;
+    border-bottom: 1px solid #8ab4f8;
+    transition: color 0.2s ease, border-bottom 0.2s ease;
+}
 
-/* --- STYLE UNTUK ANIMASI "THINKING" (tidak berubah) --- */
+.message-content a:hover {
+    color: #a7c5f9;
+    border-bottom-color: #a7c5f9;
+}
+
+
+/* =================================== */
+/* 6. ANIMASI & EFEK VISUAL            */
+/* =================================== */
+/* Indikator Loading (thinking/mencari) */
 .thinking-indicator {
     display: flex;
     align-items: center;
@@ -270,10 +286,6 @@ input#chat-input::placeholder {
     -webkit-text-fill-color: transparent;
     animation: shimmer 2s linear infinite;
     font-style: italic;
-}
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
 }
 .bouncing-dots {
     display: flex;
@@ -292,28 +304,32 @@ input#chat-input::placeholder {
 .dot-2 { animation-delay: -0.16s; }
 .dot-3 { animation-delay: 0s; }
 .dot-4 { animation-delay: 0.16s; }
+
+/* Kursor Efek Mengetik */
+.typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background-color: var(--text-color);
+    animation: blink 1s infinite;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+}
+
+/* Keyframes (Aturan Animasi) */
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
 @keyframes bounce {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1.0); }
 }
-
-/* Animasi Global (tidak berubah) */
 @keyframes rotate-gradient {
     0% { filter: hue-rotate(0deg); }
     100% { filter: hue-rotate(360deg); }
 }
-
-/* ... (semua kode CSS lama Anda) ... */
-
-/* --- STYLE BARU UNTUK LINK SUMBER --- */
-.message-content a {
-    color: #8ab4f8; /* Warna biru yang enak dilihat di tema gelap */
-    text-decoration: none; /* Hapus garis bawah default */
-    border-bottom: 1px solid #8ab4f8; /* Ganti dengan garis bawah kustom */
-    transition: color 0.2s ease, border-bottom 0.2s ease;
-}
-
-.message-content a:hover {
-    color: #a7c5f9;
-    border-bottom-color: #a7c5f9;
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
