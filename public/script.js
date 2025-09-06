@@ -2,20 +2,28 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     const converter = new showdown.Converter();
 
+    // Referensi elemen DOM
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatContainer = document.getElementById('chat-container');
     const initialView = document.getElementById('initial-view');
     const mainContent = document.querySelector(".main-content");
 
+    // State aplikasi
     let chatHistory = [];
     let isTyping = false; // Flag untuk mencegah submit saat AI sedang mengetik
 
+    // Event listener utama
     chatForm.addEventListener('submit', handleFormSubmit);
 
     async function handleFormSubmit(event) {
         event.preventDefault();
-        const userInput = chat-input.value.trim();
+        
+        // =======================================================
+        // INI ADALAH BARIS YANG DIPERBAIKI
+        const userInput = chatInput.value.trim();
+        // =======================================================
+
         if (!userInput || isTyping) return; // Jangan kirim jika kosong atau AI sedang mengetik
 
         if (initialView && initialView.style.display !== 'none') {
@@ -23,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         displayUserMessage(userInput);
-        chatInput.value = '';
+        chatInput.value = ''; // Kosongkan input setelah dikirim
 
         const searchKeywords = ['berita', 'siapa', 'apa itu', 'kapan', 'dimana', 'terkini', 'harga', 'cuaca'];
         const isLikelySearch = searchKeywords.some(keyword => userInput.toLowerCase().includes(keyword));
@@ -44,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             removeLoadingIndicator();
-            await displayAiMessage(data.reply); // Ubah jadi 'await'
+            await displayAiMessage(data.reply);
 
         } catch (error) {
             console.error('Error:', error);
@@ -62,9 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
 
-    // =======================================================
-    // FUNGSI BARU DENGAN EFEK MENGETIK
-    // =======================================================
     function displayAiMessage(message) {
         return new Promise(resolve => {
             isTyping = true;
@@ -84,31 +89,27 @@ document.addEventListener('DOMContentLoaded', () => {
             scrollToBottom();
             
             let i = 0;
-            const typingSpeed = 20; // Kecepatan mengetik dalam milidetik (makin kecil makin cepat)
+            const typingSpeed = 20;
             let currentText = "";
 
             function type() {
                 if (i < message.length) {
                     currentText += message[i];
-                    // Konversi Markdown menjadi HTML di setiap karakter
                     contentDiv.innerHTML = converter.makeHtml(currentText) + '<span class="typing-cursor"></span>';
                     i++;
-                    scrollToBottom(); // Terus scroll saat mengetik
+                    scrollToBottom();
                     setTimeout(type, typingSpeed);
                 } else {
-                    // Hapus kursor setelah selesai
                     contentDiv.innerHTML = converter.makeHtml(message);
-                    isTyping = false; // Selesai mengetik
-                    resolve(); // Tandai Promise selesai
+                    isTyping = false;
+                    resolve();
                 }
             }
             type();
         });
     }
-    // =======================================================
 
     function showLoadingIndicator(isSearching) {
-        // ... (Fungsi ini tidak berubah)
         const indicatorText = isSearching ? "mencari..." : "thinking...";
         const indicator = document.createElement('div');
         indicator.id = 'loading-indicator';
@@ -124,13 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function removeLoadingIndicator() {
-        // ... (Fungsi ini tidak berubah)
         const indicator = document.getElementById('loading-indicator');
         if (indicator) indicator.remove();
     }
 
     function scrollToBottom() {
-        // ... (Fungsi ini tidak berubah)
         mainContent.scrollTop = mainContent.scrollHeight;
     }
 
