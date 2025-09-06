@@ -12,7 +12,7 @@
     "gemini",
     "serper"
   ],
-  "author": "Qwen Riz",
+  "author": "Qwen",
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.12.0",
