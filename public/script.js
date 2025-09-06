@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let abortController = new AbortController();
     let isRecognizing = false;
 
-    // === Inisialisasi ===
+    // === Inisialisasi Aplikasi ===
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
     if (SpeechRecognition) {
@@ -61,12 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
     voiceBtn.addEventListener('click', toggleVoiceRecognition);
     sendBtn.addEventListener('click', handleSendOrStop);
     chatInput.addEventListener('input', updateSendButtonState);
-    document.body.addEventListener('click', handleDynamicClicks);
+    
     attachBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         attachmentPopup.classList.toggle('show');
     });
-    document.body.addEventListener('click', () => attachmentPopup.classList.remove('show'));
+
+    // Listener global untuk menutup popup/menu saat klik di luar
+    document.body.addEventListener('click', (e) => {
+        if (!e.target.closest('.menu-dots')) {
+            document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
+        }
+        if (!e.target.closest('.add-btn')) {
+            attachmentPopup.classList.remove('show');
+        }
+        handleDynamicClicks(e); // Juga jalankan listener dinamis lainnya
+    });
+
     attachCameraBtn.addEventListener('click', () => fileInputCamera.click());
     attachGalleryBtn.addEventListener('click', () => fileInputGallery.click());
     attachFilesBtn.addEventListener('click', () => fileInputFiles.click());
@@ -82,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sendBtn.classList.contains('loading')) return;
 
         if (welcomeScreen.style.display !== 'none') { welcomeScreen.style.display = 'none'; }
-        if (currentChatId === null) { createNewChatSession(prompt || "Chat baru"); }
+        if (currentChatId === null) { createNewChatSession(prompt || attachedFile.name); }
 
         const userMessage = { role: "user", parts: [{ text: prompt, file: attachedFile }] };
         addMessageToSession(currentChatId, userMessage);
@@ -102,7 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let lastUserMessage, historyForApi;
         
         if (isRegenerating) {
-            currentSession.messages = currentSession.messages.filter(m => m.role === "user");
+            // Hapus balasan AI terakhir dari histori dan DOM
+            currentSession.messages.pop(); 
             lastUserMessage = currentSession.messages[currentSession.messages.length - 1];
             historyForApi = currentSession.messages.slice(0, -1);
             
@@ -132,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            if (!response.ok) throw new Error((await response.json()).error);
+            if (!response.ok) throw new Error((await response.json()).error || 'Unknown error');
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
@@ -177,11 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             const aiMessage = { role: "model", parts: [{ text: fullResponse }] };
-            if (isRegenerating) {
-                currentSession.messages.push(aiMessage);
-            } else {
-                addMessageToSession(currentChatId, aiMessage);
-            }
+            addMessageToSession(currentChatId, aiMessage);
             saveSessionsToStorage();
 
         } catch (error) {
@@ -195,9 +203,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleDynamicClicks(e) {
-        const historySpan = e.target.closest('.history-item span');
-        if (historySpan) {
-            currentChatId = historySpan.parentElement.dataset.id;
+        const historyItem = e.target.closest('.history-item');
+        if (historyItem && !e.target.closest('.menu-dots')) {
+            currentChatId = historyItem.dataset.id;
             renderChat(currentChatId);
             renderSidebar();
             closeSidebar();
@@ -207,17 +215,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (menuDots) {
             e.stopPropagation();
             const menu = menuDots.nextElementSibling;
-            document.querySelectorAll('.menu-options').forEach(m => { if (m !== menu) m.style.display = 'none'; });
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        } else if (!e.target.closest('.attachment-popup')) {
-             document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
-             attachmentPopup.classList.remove('show');
+            const isVisible = menu.style.display === 'block';
+            document.querySelectorAll('.menu-options').forEach(m => m.style.display = 'none');
+            menu.style.display = isVisible ? 'none' : 'block';
         }
         
         const deleteBtn = e.target.closest('.delete-btn');
-        if (deleteBtn) { deleteSession(deleteBtn.parentElement.dataset.id); }
+        if (deleteBtn) { deleteSession(deleteBtn.closest('.menu-options').dataset.id); }
         const exportBtn = e.target.closest('.export-btn');
-        if (exportBtn) { exportSession(exportBtn.parentElement.dataset.id); }
+        if (exportBtn) { exportSession(exportBtn.closest('.menu-options').dataset.id); }
         
         const copyBtn = e.target.closest('.copy-btn');
         if (copyBtn) {
@@ -244,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
             speakText(textToSpeak);
         }
     }
-    
+
     function renderSidebar() {
         historyContainer.innerHTML = '';
         if (chatSessions.length > 0) {
@@ -296,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fileHtml = `
                 <div class="attachment-preview-in-chat">
                     <div class="file-info">
-                        ${getFileIcon(file.mimeType)}
+                        <span id="file-icon">${getFileIcon(file.mimeType)}</span>
                         <span class="file-name">${file.name}</span>
                     </div>
                 </div>`;
@@ -306,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
     
-    // ... (sisa kode lengkap dari jawaban sebelumnya)
     function displayAiMessage(text, isStreaming = false) {
         const el = document.createElement('div');
         el.className = 'ai-message';
@@ -331,8 +336,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateSendButtonState() {
         const hasText = chatInput.value.trim().length > 0;
-        voiceBtn.style.display = hasText || attachedFile ? 'none' : 'flex';
-        sendBtn.style.display = hasText || attachedFile ? 'flex' : 'none';
+        const hasContent = hasText || attachedFile;
+        voiceBtn.style.display = hasContent ? 'none' : 'flex';
+        sendBtn.style.display = hasContent ? 'flex' : 'none';
         
         if (!sendBtn.querySelector('svg')) {
              setLoadingState(false);
@@ -424,7 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return '📎'; // Generic file
     }
 
-    // ... (sisa fungsi helper)
     function startNewChat() { currentChatId = null; renderChat(null); renderSidebar(); closeSidebar(); }
     function createNewChatSession(prompt) {
         currentChatId = `chat_${Date.now()}`;
