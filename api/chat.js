@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
         }
         
         const genAI = new GoogleGenerativeAI(geminiApiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const lowerCaseMessage = message.toLowerCase();
         const requiresSearch = SEARCH_TRIGGERS.some(keyword => lowerCaseMessage.includes(keyword));
