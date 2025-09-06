@@ -1,108 +1,77 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const chatForm = document.getElementById('chat-form');
-    const userInput = document.getElementById('user-input');
-    const fileInput = document.getElementById('file-input');
-    const chatHistoryEl = document.getElementById('chat-history');
-    const initialView = document.getElementById('initial-view');
-    const mainContent = document.querySelector('.main-content');
+    
+    // 1. Inisialisasi Lucide Icons
+    lucide.createIcons();
 
-    // Variabel untuk menyimpan riwayat percakapan
-    let conversationHistory = [];
-    let currentFile = null;
+    // 2. Animasi Teks Morph untuk Placeholder Input
+    const chatInput = document.getElementById('chat-input');
+    const placeholders = [
+        "Tanyakan apa saja padaku...",
+        "Contoh: buatkan puisi tentang senja",
+        "Apa itu kecerdasan buatan?",
+        "Tulis sebuah cerita pendek...",
+        "Bagaimana cara kerja Qwen?"
+    ];
+    let currentPlaceholderIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    
+    const randomChars = "abcdefghijklmnopqrstuvwxyz1234567890";
+    let morphInterval;
+    let originalText;
 
-    fileInput.addEventListener('change', (event) => {
-        currentFile = event.target.files[0];
-        if (currentFile) {
-            userInput.placeholder = `Tanya tentang: ${currentFile.name}`;
-        }
-    });
-
-    chatForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        const userMessage = userInput.value.trim();
-        if (userMessage === '' && !currentFile) return;
-
-        // Tampilkan pesan pengguna di UI
-        const isFirstMessage = !initialView.classList.contains('hidden');
-        if (isFirstMessage) {
-            initialView.classList.add('hidden');
-            mainContent.classList.add('chat-started');
-        }
-        appendMessage(userMessage, 'user', true);
-        
-        // Buat FormData untuk dikirim
-        const formData = new FormData();
-        formData.append('prompt', userMessage);
-        formData.append('history', JSON.stringify(conversationHistory));
-        if (currentFile) {
-            formData.append('file', currentFile);
-        }
-        
-        // Reset input
-        userInput.value = '';
-        fileInput.value = ''; // Reset file input
-        userInput.placeholder = "Tanya atau upload file...";
-        currentFile = null;
-
-        // Tampilkan animasi thinking & siapkan container AI message
-        const thinkingElement = showThinkingAnimation();
-        const aiMessageContainer = appendMessage("", 'model', false);
-
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                body: formData,
-            });
-
-            thinkingElement.remove(); // Hapus animasi setelah respon pertama diterima
-            if (!response.ok || !response.body) {
-                throw new Error(`Error: ${response.statusText}`);
+    function startMorphing(text) {
+        let i = 0;
+        originalText = text;
+        clearInterval(morphInterval);
+        morphInterval = setInterval(() => {
+            let morphedText = '';
+            for (let j = 0; j < originalText.length; j++) {
+                if (j < i) {
+                    morphedText += originalText[j];
+                } else {
+                    morphedText += randomChars[Math.floor(Math.random() * randomChars.length)];
+                }
             }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let aiResponseText = "";
+            chatInput.placeholder = morphedText;
             
-            // Streaming respon dari API
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-                aiResponseText += decoder.decode(value, { stream: true });
-                // Render teks sebagai Markdown
-                aiMessageContainer.innerHTML = marked.parse(aiResponseText);
-                scrollToBottom();
+            if (i >= originalText.length) {
+                clearInterval(morphInterval);
+                chatInput.placeholder = originalText;
             }
-
-            // Simpan riwayat setelah AI selesai merespon
-            conversationHistory.push({ role: 'user', parts: [{ text: userMessage }] });
-            conversationHistory.push({ role: 'model', parts: [{ text: aiResponseText }] });
-
-        } catch (error) {
-            if (thinkingElement) thinkingElement.remove();
-            aiMessageContainer.innerText = 'Maaf, terjadi kesalahan koneksi dengan server AI.';
-            console.error('Error:', error);
+            i += 1/3; // Kecepatan morphing
+        }, 30);
+    }
+    
+    function type() {
+        const fullText = placeholders[currentPlaceholderIndex];
+        
+        if (isDeleting) {
+            charIndex--;
+        } else {
+            charIndex++;
         }
-    });
+        
+        let displayText = fullText.substring(0, charIndex);
+        chatInput.placeholder = displayText + "|";
 
-    function appendMessage(text, role, saveToHistory) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${role === 'user' ? 'user-message' : 'ai-message'}`;
-        messageDiv.innerText = text;
-        chatHistoryEl.appendChild(messageDiv);
-        scrollToBottom();
-        return messageDiv;
+        let typeSpeed = isDeleting ? 50 : 150;
+
+        if (!isDeleting && charIndex === fullText.length) {
+            // Jeda setelah selesai mengetik
+            typeSpeed = 3000;
+            isDeleting = true;
+            // Panggil animasi morphing saat teks penuh
+            startMorphing(fullText);
+
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            currentPlaceholderIndex = (currentPlaceholderIndex + 1) % placeholders.length;
+        }
+
+        setTimeout(type, typeSpeed);
     }
 
-    function showThinkingAnimation() {
-        const thinkingDiv = document.createElement('div');
-        thinkingDiv.className = 'bouncing-loader';
-        thinkingDiv.innerHTML = '<div></div><div></div><div></div>';
-        chatHistoryEl.appendChild(thinkingDiv);
-        scrollToBottom();
-        return thinkingDiv;
-    }
-
-    function scrollToBottom() {
-        mainContent.scrollTop = mainContent.scrollHeight;
-    }
+    // Mulai animasi
+    type();
 });

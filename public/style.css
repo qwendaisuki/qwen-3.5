@@ -1,97 +1,187 @@
-/* =================================
-   1. Reset dan Pengaturan Dasar
-   ================================= */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #000000; color: #ffffff; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+/* Reset dan Pengaturan Dasar */
+:root {
+    --bg-color: #000000;
+    --text-color: #E0E0E0;
+    --text-secondary: #888888;
+    --gradient-start: #6a11cb;
+    --gradient-end: #2575fc;
+}
 
-/* =================================
-   2. Layout Utama (Header, Main, Footer)
-   ================================= */
-.app-header { position: absolute; top: 0; left: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; width: 100%; }
-.main-content { flex-grow: 1; display: flex; flex-direction: column; align-items: center; text-align: center; overflow-y: auto; padding: 80px 0 20px 0; justify-content: center; }
-.main-content.chat-started { justify-content: flex-start; }
-.app-footer { padding: 10px 20px 20px 20px; width: 100%; z-index: 10; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-/* =================================
-   3. Komponen Header & Navigasi
-   ================================= */
-.header-icon, .nav-icon, .nav-initial { cursor: pointer; }
-.header-icon, .nav-icon { color: #a0a0a0; }
-.main-nav { display: flex; align-items: center; border-radius: 50px; padding: 5px; gap: 10px; background: rgba(45, 45, 45, 0.7); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-.nav-icon { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; }
-.nav-initial { width: 44px; height: 44px; background-color: #3b82f6; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: bold; color: white; }
-
-/* =================================
-   4. Tampilan Awal (Logo & Judul)
-   ================================= */
-#initial-view { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-#initial-view.hidden { display: none; }
-.animated-logo { width: 100px; height: 100px; margin-bottom: 20px; background: linear-gradient(60deg, #a166ab, #5073b8, #1098ad, #f79533, #ef4e7b); background-size: 300% 300%; animation: gradient-animation 8s ease infinite; -webkit-mask-image: url('qwen-logo.png'); mask-image: url('qwen-logo.png'); -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
-.title { font-size: 2.2rem; font-weight: 600; margin-bottom: 8px; }
-.subtitle { font-size: 1rem; font-weight: 400; color: #c0c0c0; }
-
-/* =================================
-   5. Komponen Input Form
-   ================================= */
-.input-form { width: 100%; }
-.input-wrapper { border-radius: 50px; padding: 2px; background: linear-gradient(90deg, #5073b8, #a166ab, #ef4e7b, #f79533, #5073b8); background-size: 400% 100%; animation: gradient-animation 6s linear infinite; }
-.input-container { display: flex; align-items: center; width: 100%; background-color: #000; border-radius: 48px; padding: 6px 15px; }
-.input-container input[type="text"] { flex-grow: 1; background: transparent; border: none; outline: none; color: #ffffff; font-size: 16px; margin: 0 10px; }
-.input-container input::placeholder { color: #888; }
-.icon-button { background: transparent; border: none; color: #a0a0a0; cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center; }
-.send-button { background: transparent !important; opacity: 0.7; transition: opacity 0.3s ease; }
-.send-button:hover { opacity: 1; }
-#file-input { display: none; } /* Sembunyikan input file default */
-label.icon-button { cursor: pointer; }
-
-/* =================================
-   6. Gaya UI Chat
-   ================================= */
-#chat-history { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 24px; }
-.message { max-width: 85%; line-height: 1.6; word-wrap: break-word; }
-/* Gaya untuk format Markdown */
-.message h1, .message h2, .message h3 { margin-top: 1em; margin-bottom: 0.5em; }
-.message p { margin-bottom: 1em; }
-.message ul, .message ol { padding-left: 20px; margin-bottom: 1em; }
-.message li { margin-bottom: 0.5em; }
-.message strong { font-weight: 600; }
-.message code { background-color: #282c34; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
-.message pre { background-color: #1e1e1e; padding: 1em; border-radius: 8px; overflow-x: auto; }
-.message pre code { padding: 0; background: none; }
-
-.user-message { align-self: flex-end; text-align: right; color: #e0e0e0; }
-.ai-message { align-self: flex-start; text-align: left; color: #ffffff; }
-
-/* =================================
-   7. Animasi "Thinking" BARU
-   ================================= */
-.bouncing-loader {
-    align-self: flex-start;
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
-    width: 60px;
-    height: 35px;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
 }
-.bouncing-loader div {
-    width: 10px;
-    height: 10px;
-    margin: 3px;
-    border-radius: 50%;
-    animation: bouncing-loader 0.6s infinite alternate;
-}
-@keyframes bouncing-loader {
-    to { opacity: 0.1; transform: translateY(-16px); }
-}
-.bouncing-loader div:nth-child(1) { background-color: #5073b8; }
-.bouncing-loader div:nth-child(2) { background-color: #a166ab; animation-delay: 0.2s; }
-.bouncing-loader div:nth-child(3) { background-color: #ef4e7b; animation-delay: 0.4s; }
 
-/* =================================
-   8. Keyframes Global
-   ================================= */
-@keyframes gradient-animation {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+.app-container {
+    width: 100%;
+    max-width: 768px; /* Batas lebar untuk tampilan seperti mobile */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+.version-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+}
+.icon-btn i, .version-selector i {
+    width: 24px;
+    height: 24px;
+}
+.app-header button:last-child i {
+    border: 2px solid var(--text-secondary);
+    border-radius: 50%;
+    padding: 2px;
+}
+
+/* Konten Utama */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 120px; /* Ruang untuk input chat */
+}
+
+.logo-container {
+    margin-bottom: 1.5rem;
+    position: relative;
+    width: 90px;
+    height: 90px;
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+    animation: rotate-gradient 10s ease infinite;
+}
+
+.main-content h1 {
+    font-size: 1.5rem;
+    font-weight: 500;
+}
+
+.main-content .version {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+
+/* Footer dan Input Chat */
+.chat-footer {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+}
+
+.chat-input-container {
+    padding: 3px;
+    border-radius: 30px;
+    position: relative;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+    animation: rotate-gradient 5s linear infinite;
+    z-index: 1;
+}
+
+.chat-input-container::before {
+    content: '';
+    position: absolute;
+    inset: 3px; /* Ketebalan outline */
+    background: var(--bg-color);
+    border-radius: 27px;
+    z-index: -1;
+}
+
+
+.chat-form {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border-radius: 27px;
+    padding: 0.5rem 0.5rem;
+}
+
+
+input#chat-input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0.5rem;
+    height: 38px;
+}
+
+input#chat-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.icon-btn-input {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+.icon-btn-input:last-child {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+
+.copyright {
+    margin-top: 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Animasi */
+@keyframes rotate-gradient {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
 }
