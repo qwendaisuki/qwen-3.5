@@ -1,65 +1,38 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// Mengimpor library Google Generative AI
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const serperApiKey = process.env.SERPER_API_KEY;
+// Fungsi utama yang akan dijalankan oleh Vercel sebagai endpoint API
+export default async function handler(req, res) {
+  // Hanya izinkan permintaan dengan metode POST untuk keamanan
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
 
-export const config = { runtime: 'edge' };
+  try {
+    // 1. Inisialisasi Model Gemini dengan API Key dari Vercel Environment
+    // Pastikan nama variabel di Vercel adalah GOOGLE_API_KEY
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-const tools = [{ functionDeclarations: [{ name: "google_search", description: "Gunakan untuk mencari informasi terkini atau spesifik dari internet. Wajib digunakan untuk berita, peristiwa terkini, atau data real-time.", parameters: { type: "OBJECT", properties: { query: { type: "STRING", description: "Kata kunci pencarian deskriptif dalam Bahasa Indonesia." } }, required: ["query"] } }] }];
+    // 2. Ambil pesan pengguna dari body permintaan yang dikirim dari frontend
+    const { message } = req.body;
 
-async function googleSearch(query) {
-    const response = await fetch('https://google.serper.dev/search', {
-        method: 'POST',
-        headers: { 'X-API-KEY': serperApiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: query, gl: 'id', hl: 'id' }),
-    });
-    if (!response.ok) return `Error searching: ${response.statusText}`;
-    const data = await response.json();
-    return JSON.stringify(data.organic.map(r => ({ title: r.title, link: r.link, snippet: r.snippet })).slice(0, 5));
-}
-
-export default async function handler(req) {
-    if (req.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405 });
+    // Validasi: pastikan pesan tidak kosong
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required in the request body.' });
     }
-    try {
-        const { prompt, history } = await req.json();
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            tools: tools,
-            systemInstruction: "You are Qwen, an advanced AI assistant. Your responses are well-structured and friendly. When you use the google_search tool, you MUST cite your sources. After your main answer, add a section called 'Sumber:' and list the sources you used in Markdown format like this: `1. [Judul Artikel](URL)`.",
-        });
 
-        const chat = model.startChat({ history: history || [] });
-        const result = await chat.sendMessageStream(prompt);
+    // 3. Hasilkan konten (respons AI) berdasarkan pesan pengguna
+    const result = await model.generateContent(message);
+    const response = await result.response;
+    const text = response.text();
 
-        const stream = new ReadableStream({
-            async start(controller) {
-                const encoder = new TextEncoder();
-                for await (const chunk of result.stream) {
-                    const functionCalls = chunk.functionCalls();
-                    if (functionCalls && functionCalls.length > 0) {
-                        const call = functionCalls[0];
-                        if (call.name === "google_search") {
-                            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'tool_start', tool: 'google_search', query: call.args.query })}\n\n`));
-                            const searchResult = await googleSearch(call.args.query);
-                            const finalResult = await chat.sendMessageStream([{ functionResponse: { name: "google_search", response: { content: searchResult } } }]);
-                            for await (const finalChunk of finalResult.stream) {
-                                if (finalChunk.text()) {
-                                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_chunk', content: finalChunk.text() })}\n\n`));
-                                }
-                            }
-                        }
-                    } else if (chunk.text()) {
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text_chunk', content: chunk.text() })}\n\n`));
-                    }
-                }
-                controller.close();
-            },
-        });
-        return new Response(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
-    } catch (error) {
-        console.error("Error calling Gemini API:", error);
-        return new Response(JSON.stringify({ error: 'Failed to generate content from AI', details: error.message }), { status: 500 });
-    }
+    // 4. Kirim kembali respons dari AI ke frontend sebagai JSON
+    res.status(200).json({ reply: text });
+
+  } catch (error) {
+    // 5. Tangani jika terjadi error (misalnya API key salah, masalah jaringan, dll.)
+    console.error('Error calling Google AI:', error);
+    res.status(500).json({ error: 'An error occurred while communicating with the AI.' });
+  }
 }
