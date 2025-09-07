@@ -17,10 +17,13 @@ async function handleCredentialResponse(response) {
 
 function initializeGoogleLogin() {
     try {
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-        
-        if (!clientId) {
-            throw new Error('Client ID tidak ditemukan. Pastikan NEXT_PUBLIC_GOOGLE_CLIENT_ID sudah diatur di Vercel.');
+        // =======================================================
+        // PENTING: Membaca Client ID langsung dari meta tag HTML
+        // =======================================================
+        const clientId = document.querySelector('meta[name="google-client-id"]').getAttribute('content');
+
+        if (!clientId || clientId.includes("YOUR_GOOGLE_CLIENT_ID")) {
+            throw new Error('Google Client ID belum diatur di login.html');
         }
 
         window.google.accounts.id.initialize({

@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ======================================================= -->
+    <!-- PENTING: GANTI "YOUR_GOOGLE_CLIENT_ID" DI BAWAH INI     -->
+    <!-- DENGAN CLIENT ID ASLI DARI GOOGLE CLOUD ANDA           -->
+    <!-- ======================================================= -->
+    <meta name="google-client-id" content="192022486671-gnijosp5ck655efq2dpd0v1c8mqrsrqv.apps.googleusercontent.com">
+
     <title>Login - Qwen 3.5</title>
     <link rel="stylesheet" href="login.style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async onload="onGoogleLibraryLoad()"></script>
+    <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
     <div class="background-gradient"></div>
@@ -24,21 +31,11 @@
                 <span class="or-text">or</span>
                 <span class="line"></span>
             </div>
-            
-            <!-- Wadah untuk Tombol Google (Biarkan Kosong) -->
             <div id="google-btn-container">
-                <!-- Tombol Google akan dibuat secara otomatis di sini -->
+                <!-- Tombol Google akan dibuat oleh JavaScript di sini -->
             </div>
         </div>
     </div>
-    
-    <!-- Tag tersembunyi untuk inisialisasi otomatis oleh Google -->
-    <div id="g_id_onload"
-         data-client_id="" 
-         data-callback="handleCredentialResponse"
-         data-auto_prompt="false">
-    </div>
-
     <script src="login.script.js"></script>
 </body>
 </html>
