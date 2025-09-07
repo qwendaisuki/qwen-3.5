@@ -6,6 +6,9 @@
   "scripts": {
     "start": "vercel dev"
   },
+  "engines": {
+    "node": "18.x"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.12.0",
     "google-auth-library": "^9.11.0"
