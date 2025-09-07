@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Qwen 3.5</title>
+    <link rel="stylesheet" href="login.style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div class="background-gradient"></div>
+    <div class="login-container">
+        <div class="login-box">
+            <img src="/qwen-logo.png" alt="Qwen Logo" class="logo-img">
+            <h1>Welcome</h1>
+            <p>AI Assistant Intelligence</p>
+            <form id="login-form">
+                <input type="text" placeholder="Create Username" autocomplete="off" required>
+                <input type="password" placeholder="Create Password" required>
+            </form>
+            <div class="divider">
+                <span class="line"></span>
+                <span class="or-text">or</span>
+                <span class="line"></span>
+            </div>
+            <div id="google-btn-container">
+                <div id="g_id_onload" data-client_id data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+                <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="continue_with" data-size="large" data-logo_alignment="left"></div>
+            </div>
+        </div>
+    </div>
+    <script src="login.script.js"></script>
+</body>
+</html>
