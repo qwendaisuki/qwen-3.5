@@ -10,11 +10,13 @@
 <body>
     <div class="app-container">
         <header class="app-header">
-            <button class="icon-btn" aria-label="Menu"><i data-lucide="menu"></i></button>
-            <div class="version-selector">
-                <span>Qwen 3.5</span><i data-lucide="chevron-down"></i>
+            <div id="user-profile">
+                <img id="user-avatar" src="" alt="Avatar">
+                <span id="welcome-message"></span>
             </div>
-            <button class="icon-btn" aria-label="Sesi baru"><i data-lucide="plus"></i></button>
+            <button class="icon-btn" id="logout-btn" aria-label="Logout">
+                <i data-lucide="log-out"></i>
+            </button>
         </header>
         <main class="main-content">
             <div id="initial-view">
@@ -40,18 +42,9 @@
     </div>
     <div id="upload-modal" class="modal-backdrop">
         <div class="modal-content">
-            <button class="modal-option" id="open-camera">
-                <i data-lucide="camera"></i>
-                <span>Kamera</span>
-            </button>
-            <button class="modal-option" id="open-gallery">
-                <i data-lucide="image"></i>
-                <span>Galeri</span>
-            </button>
-            <button class="modal-option" id="open-files">
-                <i data-lucide="file-up"></i>
-                <span>File</span>
-            </button>
+            <button class="modal-option" id="open-camera"><i data-lucide="camera"></i><span>Kamera</span></button>
+            <button class="modal-option" id="open-gallery"><i data-lucide="image"></i><span>Galeri</span></button>
+            <button class="modal-option" id="open-files"><i data-lucide="file-up"></i><span>File</span></button>
         </div>
     </div>
     <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
