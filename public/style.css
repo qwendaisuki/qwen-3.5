@@ -24,15 +24,23 @@ body {
     min-height: -webkit-fill-available;
     overflow: hidden;
 }
+
+/* =================================== */
+/* PERBAIKAN UTAMA UNTUK SCROLLING BEBAS */
+/* =================================== */
 .app-container {
     width: 100%;
     max-width: 768px;
-    height: 100vh;
-    height: -webkit-fill-available;
+    /* Menggunakan 'dvh' (Dynamic Viewport Height) yang beradaptasi dengan keyboard mobile */
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     background-color: var(--bg-color);
+    /* Mencegah seluruh halaman ikut-ikutan scroll */
+    overflow: hidden;
 }
+/* =================================== */
+
 .app-header {
     flex-shrink: 0;
     display: flex;
