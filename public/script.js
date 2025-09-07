@@ -2,36 +2,27 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     const converter = new showdown.Converter();
 
-    // Referensi elemen DOM
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatContainer = document.getElementById('chat-container');
     const initialView = document.getElementById('initial-view');
     const mainContent = document.querySelector(".main-content");
 
-    // State aplikasi
     let chatHistory = [];
-    let isTyping = false; // Flag untuk mencegah submit saat AI sedang mengetik
-
-    // Event listener utama
+    
     chatForm.addEventListener('submit', handleFormSubmit);
 
     async function handleFormSubmit(event) {
         event.preventDefault();
-        
-        // =======================================================
-        // INI ADALAH BARIS YANG DIPERBAIKI
         const userInput = chatInput.value.trim();
-        // =======================================================
-
-        if (!userInput || isTyping) return; // Jangan kirim jika kosong atau AI sedang mengetik
+        if (!userInput) return;
 
         if (initialView && initialView.style.display !== 'none') {
             initialView.style.display = 'none';
         }
 
         displayUserMessage(userInput);
-        chatInput.value = ''; // Kosongkan input setelah dikirim
+        chatInput.value = '';
 
         const searchKeywords = ['berita', 'siapa', 'apa itu', 'kapan', 'dimana', 'terkini', 'harga', 'cuaca'];
         const isLikelySearch = searchKeywords.some(keyword => userInput.toLowerCase().includes(keyword));
@@ -50,14 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            
             removeLoadingIndicator();
-            await displayAiMessage(data.reply);
+            displayAiMessage(data.reply);
 
         } catch (error) {
             console.error('Error:', error);
             removeLoadingIndicator();
-            await displayAiMessage(`**Maaf, terjadi kesalahan:**\n\n\`\`\`\n${error.message}\n\`\`\`\n\nCoba lagi nanti.`);
+            displayAiMessage(`**Maaf, terjadi kesalahan:**\n\n\`\`\`\n${error.message}\n\`\`\`\n\nCoba lagi nanti.`);
         }
     }
 
@@ -71,42 +61,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayAiMessage(message) {
-        return new Promise(resolve => {
-            isTyping = true;
-            chatHistory.push({ role: 'model', parts: [{ text: message }] });
-            
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('chat-message', 'ai-message');
-            messageElement.innerHTML = `
-                <div class="ai-header">
-                    <img src="/qwen-logo.png" alt="Qwen Logo">
-                    <span>Qwen</span>
-                </div>
-                <div class="message-content"></div>
-            `;
-            const contentDiv = messageElement.querySelector('.message-content');
-            chatContainer.appendChild(messageElement);
-            scrollToBottom();
-            
-            let i = 0;
-            const typingSpeed = 20;
-            let currentText = "";
-
-            function type() {
-                if (i < message.length) {
-                    currentText += message[i];
-                    contentDiv.innerHTML = converter.makeHtml(currentText) + '<span class="typing-cursor"></span>';
-                    i++;
-                    scrollToBottom();
-                    setTimeout(type, typingSpeed);
-                } else {
-                    contentDiv.innerHTML = converter.makeHtml(message);
-                    isTyping = false;
-                    resolve();
-                }
-            }
-            type();
-        });
+        chatHistory.push({ role: 'model', parts: [{ text: message }] });
+        
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message', 'ai-message', 'fade-in');
+        
+        const htmlContent = converter.makeHtml(message);
+        
+        messageElement.innerHTML = `
+            <div class="ai-header">
+                <img src="/qwen-logo.png" alt="Qwen Logo">
+                <span>Qwen</span>
+            </div>
+            <div class="message-content">
+                ${htmlContent}
+            </div>
+        `;
+        chatContainer.appendChild(messageElement);
+        scrollToBottom();
     }
 
     function showLoadingIndicator(isSearching) {
@@ -130,10 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function scrollToBottom() {
-        mainContent.scrollTop = mainContent.scrollHeight;
+        setTimeout(() => {
+            mainContent.scrollTop = mainContent.scrollHeight;
+        }, 0);
     }
 
-    // Animasi placeholder (tidak berubah)
     const placeholders = ["Tanyakan apa saja...", "Contoh: Apa berita terbaru hari ini?", "Buatkan saya skripsi tentang AI"];
     let currentPlaceholderIndex = 0, charIndex = 0, isDeleting = false;
     function typeAnimation() {
