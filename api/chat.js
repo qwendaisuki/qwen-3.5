@@ -41,7 +41,11 @@ export default async function handler(req, res) {
                 userPrompt = "Analisis dan jelaskan file ini secara detail.";
             }
         }
-        content.push({ text: userPrompt });
+        
+        // Pastikan selalu ada prompt teks, bahkan jika kosong setelah ada file
+        if (userPrompt || content.length === 0) {
+             content.push({ text: userPrompt || '' });
+        }
 
         let searchResultsContext = "";
         if (!file && prompt) {
@@ -81,7 +85,12 @@ export default async function handler(req, res) {
             history: [...history, { role: 'user', parts: [{ text: finalSystemPrompt }] }]
         });
         
-        const result = await chat.sendMessage({ parts: content });
+        // =======================================================
+        // INI ADALAH BARIS YANG DIPERBAIKI
+        // Mengirim 'content' (array) secara langsung, bukan objek
+        const result = await chat.sendMessage(content);
+        // =======================================================
+
         const text = result.response.text();
 
         return res.status(200).json({ reply: text });
