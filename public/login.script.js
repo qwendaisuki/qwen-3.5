@@ -1,4 +1,3 @@
-// Fungsi ini akan dipanggil secara OTOMATIS oleh library Google setelah login berhasil.
 async function handleCredentialResponse(response) {
     try {
         const res = await fetch('/api/auth', {
@@ -16,40 +15,37 @@ async function handleCredentialResponse(response) {
     }
 }
 
-// Fungsi ini AKAN DIPANGGIL OLEH HTML setelah script Google siap.
-// Ini adalah cara paling aman untuk memastikan 'google' sudah ada.
-function onGoogleLibraryLoad() {
-    fetch('/api/get-client-id')
-        .then(res => {
-            if (!res.ok) throw new Error('Could not fetch client ID from server');
-            return res.json();
-        })
-        .then(data => {
-            if (!data.clientId) throw new Error('Client ID is empty');
+function initializeGoogleLogin() {
+    try {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        
+        if (!clientId) {
+            throw new Error('Client ID tidak ditemukan. Pastikan NEXT_PUBLIC_GOOGLE_CLIENT_ID sudah diatur di Vercel.');
+        }
 
-            // 1. Inisialisasi Google Accounts dengan Client ID yang sudah didapat.
-            google.accounts.id.initialize({
-                client_id: data.clientId,
-                callback: handleCredentialResponse
-            });
-
-            // 2. Render tombol Google di wadah yang sudah disiapkan.
-            google.accounts.id.renderButton(
-                document.getElementById("google-btn-container"),
-                { theme: "outline", size: "large", type: "standard", shape: "pill", text: "continue_with", logo_alignment: "left" }
-            );
-        })
-        .catch(error => {
-            // 3. Jika ada masalah di tahap manapun, tampilkan error.
-            console.error("Failed to initialize Google Login:", error);
-            const googleBtnContainer = document.getElementById('google-btn-container');
-            if (googleBtnContainer) {
-                googleBtnContainer.innerHTML = "<p style='color: #ff5555; font-size: 0.8rem;'>Could not load Google Login.</p>";
-            }
+        window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleCredentialResponse
         });
+
+        window.google.accounts.id.renderButton(
+            document.getElementById("google-btn-container"),
+            { theme: "outline", size: "large", type: "standard", shape: "pill", text: "continue_with", logo_alignment: "left" }
+        );
+
+    } catch (error) {
+        console.error("Gagal menginisialisasi Google Login:", error);
+        const googleBtnContainer = document.getElementById('google-btn-container');
+        if (googleBtnContainer) {
+            googleBtnContainer.innerHTML = "<p style='color: #ff5555; font-size: 0.8rem;'>Tidak dapat memuat Google Login.</p>";
+        }
+    }
 }
 
-// Cek status login saat halaman pertama kali dibuka.
-if (localStorage.getItem('qwen-user')) {
-    window.location.href = '/index.html';
-}
+window.onload = function () {
+    if (localStorage.getItem('qwen-user')) {
+        window.location.href = '/index.html';
+        return;
+    }
+    initializeGoogleLogin();
+};
