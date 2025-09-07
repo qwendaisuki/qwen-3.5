@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div class="app-container">
         <header class="app-header">
             <button class="icon-btn" aria-label="Menu"><i data-lucide="menu"></i></button>
@@ -17,35 +16,49 @@
             </div>
             <button class="icon-btn" aria-label="Sesi baru"><i data-lucide="plus"></i></button>
         </header>
-
         <main class="main-content">
             <div id="initial-view">
-                <div class="logo-container">
-                    <img src="/qwen-logo.png" alt="Qwen Logo" class="logo-img">
-                </div>
+                <div class="logo-container"><img src="/qwen-logo.png" alt="Qwen Logo" class="logo-img"></div>
                 <h1>AI Assistant Karya Anak Bangsa</h1>
                 <p class="version">version 1.0</p>
             </div>
             <div id="chat-container"></div>
         </main>
-
         <footer class="chat-footer">
             <p class="copyright">2025 By Qwen Inc.</p>
+            <div id="file-preview-container"></div>
             <div class="chat-input-container">
                 <form class="chat-form" id="chat-form">
-                     <button class="icon-btn-input" type="button" aria-label="Tambah file"><i data-lucide="plus"></i></button>
-                    <input type="text" id="chat-input" placeholder="Tulis pesan Anda di sini..." autocomplete="off">
+                     <button class="icon-btn-input" id="upload-btn" type="button" aria-label="Tambah file">
+                         <i data-lucide="plus"></i>
+                    </button>
+                    <input type="text" id="chat-input" placeholder="Tulis pesan atau lampirkan file..." autocomplete="off">
                     <button class="icon-btn-input" type="submit" aria-label="Kirim"><i data-lucide="arrow-up"></i></button>
                 </form>
             </div>
         </footer>
     </div>
-
-    <!-- Script Lucide Icons -->
+    <div id="upload-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <button class="modal-option" id="open-camera">
+                <i data-lucide="camera"></i>
+                <span>Kamera</span>
+            </button>
+            <button class="modal-option" id="open-gallery">
+                <i data-lucide="image"></i>
+                <span>Galeri</span>
+            </button>
+            <button class="modal-option" id="open-files">
+                <i data-lucide="file-up"></i>
+                <span>File</span>
+            </button>
+        </div>
+    </div>
+    <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+    <input type="file" id="gallery-input" accept="image/*,video/*" style="display: none;">
+    <input type="file" id="file-input" style="display: none;">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- BARU: Script untuk render Markdown -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
-    <!-- Script Kustom -->
     <script src="script.js"></script>
 </body>
 </html>
