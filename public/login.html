@@ -16,20 +16,29 @@
             <h1>Welcome</h1>
             <p>AI Assistant Intelligence</p>
             <form id="login-form">
-                <input type="text" placeholder="Create Username" autocomplete="off" required>
-                <input type="password" placeholder="Create Password" required>
+                <input type="text" placeholder="Create Username" autocomplete="off">
+                <input type="password" placeholder="Create Password">
             </form>
             <div class="divider">
                 <span class="line"></span>
                 <span class="or-text">or</span>
                 <span class="line"></span>
             </div>
+            
+            <!-- Wadah untuk Tombol Google (Biarkan Kosong) -->
             <div id="google-btn-container">
-                <div id="g_id_onload" data-client_id data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
-                <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="continue_with" data-size="large" data-logo_alignment="left"></div>
+                <!-- Tombol Google akan dibuat secara otomatis di sini -->
             </div>
         </div>
     </div>
+    
+    <!-- Tag tersembunyi untuk inisialisasi otomatis oleh Google -->
+    <div id="g_id_onload"
+         data-client_id="" 
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+
     <script src="login.script.js"></script>
 </body>
 </html>
